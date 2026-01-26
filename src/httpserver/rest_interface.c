@@ -137,7 +137,15 @@ static int http_rest_get(http_request_t* request) {
 	if (!strcmp(request->url, "api/channels")) {
 		return http_rest_get_channels(request);
 	}
-
+	if (!strcmp(request->url, "api/setup-wifi")) {
+		return http_rest_post_setup_wifi(request);
+	}	
+	if (!strcmp(request->url, "api/control")) {
+		return http_rest_post_control_device(request);
+	}
+	if (!strcmp(request->url, "api/setup")) {
+		return http_rest_post_setup_mqtt(request);
+	}
 	if (!strcmp(request->url, "api/pins")) {
 		return http_rest_get_pins(request);
 	}
@@ -188,7 +196,9 @@ static int http_rest_get(http_request_t* request) {
 	if (!strcmp(request->url, "api/info")) {
 		return http_rest_get_info(request);
 	}
-
+	if (!strcmp(request->url, "api/channel")) {
+		return http_rest_get_channel(request);
+	}
 	if (!strncmp(request->url, "api/flash/", 10)) {
 		return http_rest_get_flash_advanced(request);
 	}
@@ -1313,6 +1323,12 @@ int http_rest_error(http_request_t* request, int code, char* msg) {
 		hprintf255(request, "{\"success\":%d, \"msg\":\"%s\"}", code, msg);
 	}
 	poststr(request, NULL);
+	return 0;
+}
+
+static int http_rest_succes(http_request_t* request, int code) {
+	request->responseCode = code;
+	http_setup_success(request, httpMimeTypeJson);
 	return 0;
 }
 
