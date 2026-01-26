@@ -58,6 +58,17 @@ int BTN_HOLD_REPEAT_MS;
 byte *g_defaultWakeEdge = 0;
 int g_initialPinStates = 0;
 
+int check_call;
+check_call = 0;
+int set_time = 0;
+bool set_time_release = false;
+bool curtain_lock = false;
+bool sensor_lock = false;
+int curtain_position = 50;
+int garage_state = 0;
+bool reverse = false;
+bool door_sensor = false;
+
 #if ALLOW_SSID2
 //20241125 XJIKKA SSID retain - last used SSID will be preserved
 // To enable this feature, the channel that will be used to store the last SSID 

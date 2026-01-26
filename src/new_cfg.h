@@ -108,6 +108,9 @@ const char* CFG_GetMQTTCertFile();
 byte CFG_GetDisableWebServer();
 void CFG_SetDisableWebServer(byte value);
 #endif
-
+void CFG_SetSchedule(int index, const char* key, uint32_t value);
+uint32_t CFG_GetSchedule(int index, const char* key);
+void CFG_SetEnableSensor(int enable);
+int CFG_GetEnableSensor();
 #endif
 

@@ -1279,7 +1279,7 @@ void Main_Init_AfterDelay_Unsafe(bool bStartAutoRunScripts) {
 #if ENABLE_MQTT
 	MQTT_init();
 #endif
-
+	NTP_Init();
 	CMD_Init_Delayed();
 
 	if (bStartAutoRunScripts) {
@@ -1364,7 +1364,8 @@ void Main_Init_BeforeDelay_Unsafe(bool bAutoRunScripts) {
 	if (CFG_HasFlag(OBK_FLAG_HTTP_PINMONITOR)) {
 		CFG_SetFlag(OBK_FLAG_HTTP_PINMONITOR, false);
 	}
-
+	DRV_StartDriver("NTP"); //custom
+	DRV_StartDriver("TuyaMCU");
 	if (bAutoRunScripts) {
 		CMD_ExecuteCommand("exec early.bat", COMMAND_FLAG_SOURCE_SCRIPT);
 #ifndef OBK_DISABLE_ALL_DRIVERS
@@ -1533,6 +1534,7 @@ void Main_Init_After_Delay()
 #endif
 	wifi_ssid = CFG_GetWiFiSSIDX();
 	wifi_pass = CFG_GetWiFiPassX();
+	check_accept = CFG_GetsendAccept();
 
 #if 0
 	// you can use this if you bricked your module by setting wrong access point data

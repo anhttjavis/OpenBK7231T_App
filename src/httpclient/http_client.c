@@ -17,6 +17,10 @@
 //#include "lite-log.h"
 #include "http_client.h"
 #include "iot_export_errno.h"
+int check_accept;
+bool noti = true;
+bool call = true;
+bool check_call_open = false;
 
 #define log_err(a, ...)
 #define log_debug(a, ...)

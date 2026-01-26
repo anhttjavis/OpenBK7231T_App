@@ -72,8 +72,8 @@ void OTA_RequestDownloadFromHTTP(const char *s);
 #define PLATFORM_MCU_NAME "BK7231T"
 #define MANUFACTURER "Beken Corporation"
 #elif PLATFORM_BK7238
-#define DEVICENAME_PREFIX_FULL "OpenBK7238"
-#define DEVICENAME_PREFIX_SHORT "obk"
+#define DEVICENAME_PREFIX_FULL "JS"
+#define DEVICENAME_PREFIX_SHORT "JS"
 #define PLATFORM_MCU_NAME "BK7238"
 #define MANUFACTURER "Beken Corporation"
 #elif PLATFORM_BK7231U

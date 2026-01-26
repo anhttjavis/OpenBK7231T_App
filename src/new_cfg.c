@@ -121,8 +121,8 @@ void CFG_SetDefaultConfig() {
 	strcpy(g_cfg.ping_host,"192.168.0.1");
 	//strcpy(g_cfg.mqtt_host, "192.168.0.113");		//Let default mqtt_host be empty
 	// g_cfg.mqtt_clientId is set as shortDeviceName below
-	strcpy(g_cfg.mqtt_userName, "homeassistant");
-	strcpy(g_cfg.mqtt_pass, "qqqqqqqqqq");
+	strcpy(g_cfg.mqtt_userName, "javis");
+	strcpy(g_cfg.mqtt_pass, "javis2020");
 	// already zeroed but just to remember, open AP by default
 	g_cfg.wifi_ssid[0] = 0;
 	g_cfg.wifi_pass[0] = 0;
@@ -133,6 +133,8 @@ void CFG_SetDefaultConfig() {
 	snprintf(g_cfg.longDeviceName, sizeof(g_cfg.longDeviceName), DEVICENAME_PREFIX_FULL"_%02X%02X%02X%02X",mac[2],mac[3],mac[4],mac[5]);
 	snprintf(g_cfg.shortDeviceName, sizeof(g_cfg.shortDeviceName), DEVICENAME_PREFIX_SHORT"%02X%02X%02X%02X",mac[2],mac[3],mac[4],mac[5]);
 	strcpy_safe(g_cfg.mqtt_clientId, g_cfg.shortDeviceName, sizeof(g_cfg.mqtt_clientId));
+	strcpy_safe(g_cfg.mqtt_group, "javis", sizeof(g_cfg.mqtt_group));
+	strcpy_safe(g_cfg.webPassword,"javis2020", sizeof(g_cfg.webPassword));
 
 	// group topic will be unique for each platform, so it's easy
 	// to do group OTA without worrying about feeding wrong RBL for wrong platform
@@ -776,7 +778,262 @@ void CFG_SetWebPassword(const char *s) {
 	}
 #endif
 }
+}
 
+int CFG_GetMQTTPortLocal() {
+	return g_cfg.mqtt_port_local;
+}
+void CFG_SetMQTTPortLocal(int p) {
+	// is there a change?
+	if(g_cfg.mqtt_port_local != p) {
+		g_cfg.mqtt_port_local = p;
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+//local mqtt
+const char *CFG_GetMQTTHostLocal() {
+	return g_cfg.mqtt_host_local;
+}
+const char *CFG_GetMQTTUserNameLocal() {
+	return g_cfg.mqtt_userName_local;
+}
+const char *CFG_GetMQTTNetIdLocal() {
+	return g_cfg.mqtt_netid_local;
+}
+const char *CFG_GetMQTTPassLocal() {
+	return g_cfg.mqtt_pass_local;
+}
+
+void CFG_SetMQTTHostLocal(const char *s) {
+	// this will return non-zero if there were any changes
+	if(strcpy_safe_checkForChanges(g_cfg.mqtt_host_local, s,sizeof(g_cfg.mqtt_host_local))) {
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+void CFG_SetMQTTUserNameLocal(const char *s) {
+	// this will return non-zero if there were any changes
+	if(strcpy_safe_checkForChanges(g_cfg.mqtt_userName_local, s,sizeof(g_cfg.mqtt_userName_local))) {
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+void CFG_SetMQTTNetIdLocal(const char *s) {
+	// this will return non-zero if there were any changes
+	if(strcpy_safe_checkForChanges(g_cfg.mqtt_netid_local, s,sizeof(g_cfg.mqtt_netid_local))) {
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+void CFG_SetMQTTPassLocal(const char *s) {
+	// this will return non-zero if there were any changes
+	if(strcpy_safe_checkForChanges(g_cfg.mqtt_pass_local, s,sizeof(g_cfg.mqtt_pass_local))) {
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+
+void CFG_SetauthCode(const char *s) {
+	// this will return non-zero if there were any changes
+	if(strcpy_safe_checkForChanges(g_cfg.authCode, s,sizeof(g_cfg.authCode))) {
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+const char *CFG_GetauthCode() {
+	return g_cfg.authCode;
+}
+
+void CFG_SetUserId(int p) {
+	// this will return non-zero if there were any changes
+	if(g_cfg.userId != p) {
+		g_cfg.userId = p;
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+void CFG_SetGatewayId(int p) {
+	// this will return non-zero if there were any changes
+	if(g_cfg.gatewayId != p) {
+		g_cfg.gatewayId = p;
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+
+int CFG_GetuserId() {
+	return g_cfg.userId;
+}
+int CFG_GetGatewayId() {
+	return g_cfg.gatewayId;
+}
+
+void CFG_SetsendAccept(int p) {
+	// this will return non-zero if there were any changes
+	if(g_cfg.sendAccept != p) {
+		g_cfg.sendAccept = p;
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+void CFG_SetNoti(int p) {
+	// this will return non-zero if there were any changes
+	if(g_cfg.noti != p) {
+		g_cfg.noti = p;
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+void CFG_SetCall(int p) {
+	// this will return non-zero if there were any changes
+	if(g_cfg.call != p) {
+		g_cfg.call = p;
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+void CFG_SetCheckCallOpen(int p) {
+	// this will return non-zero if there were any changes
+	if(g_cfg.check_call_open != p) {
+		g_cfg.check_call_open = p;
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+void CFG_SetTimeStart(int p) {
+	// this will return non-zero if there were any changes
+	if(g_cfg.time_start != p) {
+		g_cfg.time_start = p;
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+void CFG_SetTimeCheckStart(int p) {
+	// this will return non-zero if there were any changes
+	if(g_cfg.time_check_start != p) {
+		g_cfg.time_check_start = p;
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+void CFG_SetTimeEnd(int p) {
+	// this will return non-zero if there were any changes
+	if(g_cfg.time_end != p) {
+		g_cfg.time_end = p;
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+void CFG_SetTimeCheckEnd(int p) {
+	// this will return non-zero if there were any changes
+	if(g_cfg.time_check_end != p) {
+		g_cfg.time_check_end = p;
+		// mark as dirty (value has changed)
+		g_cfg_pendingChanges++;
+	}
+}
+void CFG_SetSchedule(int index, const char* key, uint32_t value) {
+    if (!key) return;
+    if (strcmp(key, "set") == 0) {
+        g_cfg.schedule[index].set = value;
+    } else if (strcmp(key, "enabled") == 0) {
+        g_cfg.schedule[index].enabled = value;
+		g_cfg_pendingChanges++;
+    } else if (strcmp(key, "time") == 0) {
+        g_cfg.schedule[index].triggerTime = value;  // 11 bits
+		g_cfg_pendingChanges++;
+    } else if (strcmp(key, "recurrent") == 0) {
+        g_cfg.schedule[index].recurrent = value;  // 7 bits
+		g_cfg_pendingChanges++;
+    } else if (strcmp(key, "mask") == 0) {
+        g_cfg.schedule[index].channelMask = value;
+		g_cfg_pendingChanges++;
+    } else if (strcmp(key, "state") == 0) {
+        g_cfg.schedule[index].channelState = value;  // 7 bits
+		g_cfg_pendingChanges++;
+    } else if (strcmp(key, "passed") == 0) {
+        g_cfg.schedule[index].passed = value;
+		g_cfg_pendingChanges++;
+    }
+}
+uint32_t CFG_GetSchedule(int index, const char* key) {
+    if (!key) return -1;
+    if (strcmp(key, "set") == 0) {
+        return g_cfg.schedule[index].set;
+    } else if (strcmp(key, "enabled") == 0) {
+        return g_cfg.schedule[index].enabled;
+    } else if (strcmp(key, "time") == 0) {
+        return g_cfg.schedule[index].triggerTime;
+    } else if (strcmp(key, "recurrent") == 0) {
+        return g_cfg.schedule[index].recurrent;
+    } else if (strcmp(key, "mask") == 0) {
+        return g_cfg.schedule[index].channelMask;
+    } else if (strcmp(key, "state") == 0) {
+        return g_cfg.schedule[index].channelState;
+    } else if (strcmp(key, "passed") == 0) {
+        return g_cfg.schedule[index].passed;
+    }
+    return -1; // key không hợp lệ
+}
+void CFG_SetEnableSensor(int enable) {
+	if (g_cfg.sensor_enable != enable) {
+		g_cfg.sensor_enable = enable;
+		g_cfg_pendingChanges++;
+	}
+}
+int CFG_GetEnableSensor() {
+	return g_cfg.sensor_enable;
+}
+int CFG_GetsendAccept() {
+	return g_cfg.sendAccept;
+}
+int CFG_GetNoti() {
+	return g_cfg.noti;
+}
+int CFG_GetCall() {
+	return g_cfg.call;
+}
+int CFG_GetCheckCallOpen() {
+	return g_cfg.check_call_open;
+}
+int CFG_GetTimeStart() {
+	return g_cfg.time_start;
+}
+int CFG_GetTimeCheckStart() {
+	return g_cfg.time_check_start;
+}
+int CFG_GetTimeEnd() {
+	return g_cfg.time_end;
+}
+int CFG_GetTimeCheckEnd() {
+	return g_cfg.time_check_end;
+}
+
+void CFG_ClearSaveState() {
+	memset(&g_cfg.savestate,0,sizeof(g_cfg.savestate));
+	g_cfg_pendingChanges++;
+}
+void CFG_SetSaveState(unsigned int time, byte state) {
+	addLogAdv(LOG_INFO, LOG_FEATURE_CFG, "Set save state call");
+	int index = g_cfg.savestate.index;
+	g_cfg.savestate.time[index] = time;
+	g_cfg.savestate.state[index] = state;
+	index ++;
+	if (index == 50) {
+		g_cfg.savestate.index = 0;
+	} 
+	else {
+		g_cfg.savestate.index = index;
+	}
+	g_cfg_pendingChanges++;
+}
+
+void setupCurtainPins() {
+	CFG_ClearPins();
+	CFG_Save_SetupTimer();
+	
+}
 
 #if ENABLE_LITTLEFS
 void CFG_SetLFS_Size(uint32_t value) {

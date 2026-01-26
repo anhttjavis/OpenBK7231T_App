@@ -166,6 +166,10 @@ int HTTPClient_Async_SendGeneric(httprequest_t *request);
 int HTTPClient_Async_SendGet(const char *url_in, const char *tgFile, const char *postGetCommand);
 int HTTPClient_Async_SendPost(const char *url_in, int http_port, const char *content_type, const char *post_content, const char *post_header);
 void HTTPClient_SetCustomHeader(httpclient_t *client, const char *header);
+extern int check_accept;
+extern bool check_call_open;
+extern bool noti;
+extern bool call;
 
 #ifdef __cplusplus
 }

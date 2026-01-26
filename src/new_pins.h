@@ -1525,7 +1525,7 @@ typedef struct mainConfig_s {
 #else
 #define ALLOW_SSID2 1
 #define ALLOW_WEB_PASSWORD 1
-	char initCommandLine[1568];
+	char initCommandLine[512];
 	// offset 0x00000C00 (3072 decimal)
 	char wifi_ssid2[64];
 	// offset 0x00000C40 (3136 decimal)
@@ -1549,16 +1549,49 @@ typedef struct mainConfig_s {
 	char unused[324];
 #endif
 #endif
+	int mqtt_port_local;
+	char mqtt_host_local[32];
+	char mqtt_userName_local[32];
+	char mqtt_netid_local[20];
+	char mqtt_pass_local[32];
+	char initCommandLine[256];
+	// offset 0x00000C00 (3072 decimal)
+	char authCode[128];
+	int userId;
+	int gatewayId;
+	int sendAccept;
+	int noti;
+	int call;
+	int check_call_open;
+	int time_start;
+	int time_end;
+	int time_check_start;
+	int time_check_end;
+	int sensor_enable;
+	stateSave_t savestate;
+	schedule_t schedule[8];
 } mainConfig_t;
 
 // one sector is 4096 so it we still have some expand possibility
-#define MAGIC_CONFIG_SIZE_V3		2016
-#define MAGIC_CONFIG_SIZE_V4		3584
+#define MAGIC_CONFIG_SIZE_V3		1516  //2016
+#define MAGIC_CONFIG_SIZE_V4		3084  //3584
 
 extern mainConfig_t g_cfg;
 
 extern char g_enable_pins;
 extern int g_initialPinStates;
+extern char g_enable_pins;
+extern int g_initialPinStates;
+extern bool set_time_release;
+extern bool curtain_lock;
+extern bool sensor_lock;
+extern int curtain_position;
+extern int garage_state ;
+extern bool reverse;
+extern bool door_sensor;
+extern int check_call;
+extern int set_time;
+
 
 #define CHANNEL_SET_FLAG_FORCE		1
 #define CHANNEL_SET_FLAG_SKIP_MQTT	2

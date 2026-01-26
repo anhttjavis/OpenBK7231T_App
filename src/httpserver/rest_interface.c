@@ -70,6 +70,12 @@ static int http_rest_get_channels(http_request_t* request);
 
 static int http_rest_post_cmd(http_request_t* request);
 
+///######################
+static int http_rest_post_setup_wifi(http_request_t* request);
+static int http_rest_post_control_device(http_request_t* request);
+static int http_rest_post_setup_mqtt(http_request_t* request);
+static void shift_left_1(uint32_t* x);
+
 
 void init_rest() {
 	HTTP_RegisterCallback("/api/", HTTP_GET, http_rest_get, 1);
@@ -1300,7 +1306,323 @@ static int http_rest_post_flash_advanced(http_request_t* request) {
 	}
 	return http_rest_error(request, -1, "invalid url");
 }
+static int http_rest_post_setup_wifi(http_request_t* request) {
+	int i;
+	int r;
+	char tmp[64];
+	char tokenStrValue[MAX_JSON_VALUE_LENGTH + 1];
+	const char* wifi_ssid, * wifi_pass;
+	wifi_ssid = CFG_GetWiFiSSID();
+	wifi_pass = CFG_GetWiFiPass();
+	if ((*wifi_ssid != 0) && (*wifi_pass !=0) )
+		return http_rest_error(request, -1, "Wifi has been setup");
 
+	//https://github.com/zserge/jsmn/blob/master/example/simple.c
+	//jsmn_parser p;
+	jsmn_parser* p = os_malloc(sizeof(jsmn_parser));
+	//jsmntok_t t[128]; /* We expect no more than 128 tokens */
+#define TOKEN_COUNT 128
+	jsmntok_t* t = os_malloc(sizeof(jsmntok_t) * TOKEN_COUNT);
+	char* json_str = request->bodystart;
+	int json_len = strlen(json_str);
+
+	memset(p, 0, sizeof(jsmn_parser));
+	memset(t, 0, sizeof(jsmntok_t) * 128);
+
+	jsmn_init(p);
+	r = jsmn_parse(p, json_str, json_len, t, TOKEN_COUNT);
+	if (r < 0) {
+		ADDLOG_ERROR(LOG_FEATURE_API, "Failed to parse JSON: %d", r);
+		sprintf(tmp, "Failed to parse JSON: %d\n", r);
+		os_free(p);
+		os_free(t);
+		return http_rest_error(request, 400, tmp);
+	}
+
+	/* Assume the top-level element is an object */
+	if (r < 1 || t[0].type != JSMN_OBJECT) {
+		ADDLOG_ERROR(LOG_FEATURE_API, "Array expected", r);
+		sprintf(tmp, "Object expected");
+		os_free(p);
+		os_free(t);
+		return http_rest_error(request, 400, tmp);
+	}
+
+	/* Loop over all keys of the root object */
+	for (i = 1; i < r; i++) {
+		if (tryGetTokenString(json_str, &t[i], tokenStrValue) != true) {
+			ADDLOG_DEBUG(LOG_FEATURE_API, "Parsing failed");
+			continue;
+		}
+		//ADDLOG_DEBUG(LOG_FEATURE_API, "parsed %s", tokenStrValue);
+		// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "HTTP request: %s ", tokenStrValue);
+		if (strcmp(tokenStrValue, "authCode") == 0) {
+			if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+				// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "received authCode %s", tokenStrValue);
+				CFG_SetauthCode(tokenStrValue);
+			}
+
+			i += t[i + 1].size + 1;
+		}
+		else if (strcmp(tokenStrValue, "userId") == 0) {
+			if (t[i + 1].type != JSMN_PRIMITIVE) {
+				continue; /* We expect groups to be an array of strings */
+			}
+			int uid;
+			uid = atoi(json_str + t[i + 1].start);
+			// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "received userId %d", uid);
+			CFG_SetUserId(uid);
+			i += t[i + 1].size + 1;
+		}
+		else if (strcmp(tokenStrValue, "ssid") == 0) {
+			if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+				// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "received ssid %s", tokenStrValue);
+				CFG_SetWiFiSSID(tokenStrValue);
+			}
+			i += t[i + 1].size + 1;
+		}
+		else if (strcmp(tokenStrValue, "password") == 0) {
+			if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+				// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "received password %s", tokenStrValue);
+				CFG_SetWiFiPass(tokenStrValue);
+				CFG_SetsendAccept(1);
+			}
+
+			i += t[i + 1].size + 1;
+		}
+		else {
+			// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Unexpected key: %.*s", t[i].end - t[i].start,
+				// json_str + t[i].start);
+		}
+	}
+	http_rest_succes(request, 200);
+	CFG_Save_SetupTimer();
+	RESET_ScheduleModuleReset(1);
+	os_free(p);
+	os_free(t);
+	return 0;
+}
+
+int strcasecmp(const char *s1, const char *s2) {
+    while (*s1 && (tolower((unsigned char)*s1) == tolower((unsigned char)*s2))) {
+        s1++;
+        s2++;
+    }
+    return tolower((unsigned char)*s1) - tolower((unsigned char)*s2);
+}
+
+// Function to get the value of a header by key (case-insensitive)
+char* get_header_value(char* headers[], int count, const char* key) {
+    size_t key_len = strlen(key);
+
+    for (int i = 0; i < count; i++) {
+        if (strncasecmp(headers[i], key, key_len) == 0 && headers[i][key_len] == ':' && headers[i][key_len + 1] == ' ') {
+            return headers[i] + key_len + 2;
+        }
+    }
+    return NULL;
+}
+
+static int http_rest_post_control_device(http_request_t* request) {
+	int i;
+	int r;
+	char tmp[64];
+	char tokenStrValue[MAX_JSON_VALUE_LENGTH + 1];
+	//https://github.com/zserge/jsmn/blob/master/example/simple.c
+	//jsmn_parser p;
+	jsmn_parser* p = os_malloc(sizeof(jsmn_parser));
+	//jsmntok_t t[128]; /* We expect no more than 128 tokens */
+	//char* header = request -> headers[1];
+	char* AuthKey = get_header_value(request -> headers, request -> numheaders, "Authorization");
+	addLogAdv(LOG_INFO, LOG_FEATURE_HTTP, "key is %s", AuthKey);
+	if( AuthKey == NULL ||strcmp(AuthKey,CFG_GetMQTTPass()) != 0)
+		return 0;	
+#define TOKEN_COUNT 128
+	jsmntok_t* t = os_malloc(sizeof(jsmntok_t) * TOKEN_COUNT);
+	char* json_str = request->bodystart;
+	int json_len = strlen(json_str);
+	bool check_key = false;
+	int state_control = 0;
+	memset(p, 0, sizeof(jsmn_parser));
+	memset(t, 0, sizeof(jsmntok_t) * 128);
+	jsmn_init(p);
+	r = jsmn_parse(p, json_str, json_len, t, TOKEN_COUNT);
+	if (r < 0) {
+		ADDLOG_ERROR(LOG_FEATURE_API, "Failed to parse JSON: %d", r);
+		sprintf(tmp, "Failed to parse JSON: %d\n", r);
+		os_free(p);
+		os_free(t);
+		return http_rest_error(request, 400, tmp);
+	}
+
+	/* Assume the top-level element is an object */
+	if (r < 1 || t[0].type != JSMN_OBJECT) {
+		ADDLOG_ERROR(LOG_FEATURE_API, "Array expected", r);
+		sprintf(tmp, "Object expected");
+		os_free(p);
+		os_free(t);
+		return http_rest_error(request, 400, tmp);
+	}
+
+	/* Loop over all keys of the root object */
+for (i = 1; i < r; i++) {
+		if (tryGetTokenString(json_str, &t[i], tokenStrValue) != true) {
+			// ADDLOG_DEBUG(LOG_FEATURE_API, "Parsing failed");
+			continue;
+		}
+		//ADDLOG_DEBUG(LOG_FEATURE_API, "parsed %s", tokenStrValue);
+		// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "MQTT request: %s ", tokenStrValue);
+		if (state_control == 1) {
+			if (strcmp(tokenStrValue,"data") == 0){
+				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+					// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Control: %s ", tokenStrValue);
+					if (strcmp(tokenStrValue,"open") == 0) {
+						// curtain_position = 100;
+						// garage_state = 1;
+						// MQTT_ReturnState();
+						TuyaMCU_SendControl(OPEN);
+					}
+					else if (strcmp(tokenStrValue,"close") == 0) {
+						// curtain_position = 0;
+						// garage_state = 0;
+						// MQTT_ReturnState();
+						TuyaMCU_SendControl(CLOSE);
+					}
+					else if (strcmp(tokenStrValue,"stop") == 0){
+						// curtain_position = 50;
+						// MQTT_ReturnState();
+						TuyaMCU_SendControl(STOP);
+					}
+					else if (strcmp(tokenStrValue,"lock") == 0){
+						if(curtain_lock == false){
+							TuyaMCU_SendControlState(LOCK, LOCK_STATE);
+						}
+						else
+						{
+							TuyaMCU_SendControlState(LOCK, UNLOCK_STATE);
+						}
+					}
+				}
+			}
+			i += t[i + 1].size + 1;
+		}
+		else {
+			// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Unexpected key: %.*s", t[i].end - t[i].start,
+			// 	json_str + t[i].start);
+		}
+		if (strcmp(tokenStrValue, "type") == 0) {
+			if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+				if (!strcmp(tokenStrValue, "control")){
+					state_control = 1;
+				}
+			}
+			i += t[i + 1].size + 1;
+		}
+	}
+
+	os_free(p);
+	os_free(t);
+	return 0;
+}
+
+static int http_rest_post_setup_mqtt(http_request_t* request) {
+	int i;
+	int r;
+	int group_id = 0;
+	int gateway_id = 0;
+	char tmp[64];
+	char tokenStrValue[MAX_JSON_VALUE_LENGTH + 1];
+	//https://github.com/zserge/jsmn/blob/master/example/simple.c
+	//jsmn_parser p;
+	jsmn_parser* p = os_malloc(sizeof(jsmn_parser));
+	//jsmntok_t t[128]; /* We expect no more than 128 tokens */
+#define TOKEN_COUNT 128
+	jsmntok_t* t = os_malloc(sizeof(jsmntok_t) * TOKEN_COUNT);
+	char* json_str = request->bodystart;
+	int json_len = strlen(json_str);
+
+	memset(p, 0, sizeof(jsmn_parser));
+	memset(t, 0, sizeof(jsmntok_t) * 128);
+
+	jsmn_init(p);
+	r = jsmn_parse(p, json_str, json_len, t, TOKEN_COUNT);
+	if (r < 0) {
+		ADDLOG_ERROR(LOG_FEATURE_API, "Failed to parse JSON: %d", r);
+		sprintf(tmp, "Failed to parse JSON: %d\n", r);
+		os_free(p);
+		os_free(t);
+		return http_rest_error(request, 400, tmp);
+	}
+
+	/* Assume the top-level element is an object */
+	if (r < 1 || t[0].type != JSMN_OBJECT) {
+		ADDLOG_ERROR(LOG_FEATURE_API, "Array expected", r);
+		sprintf(tmp, "Object expected");
+		os_free(p);
+		os_free(t);
+		return http_rest_error(request, 400, tmp);
+	}
+
+	/* Loop over all keys of the root object */
+	for (i = 1; i < r; i++) {
+		if (tryGetTokenString(json_str, &t[i], tokenStrValue) != true) {
+			ADDLOG_DEBUG(LOG_FEATURE_API, "Parsing failed");
+			continue;
+		}
+		//ADDLOG_DEBUG(LOG_FEATURE_API, "parsed %s", tokenStrValue);
+		// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "HTTP request: %s ", tokenStrValue);
+		if (strcmp(tokenStrValue, "group_id") == 0) {
+			if (t[i + 1].type != JSMN_PRIMITIVE) {
+				continue; /* We expect groups to be an array of strings */
+			}
+			group_id = atoi(json_str + t[i + 1].start);
+			// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "received userId %d", group_id);
+			CFG_SetUserId(group_id);
+
+			i += t[i + 1].size + 1;
+		}
+		else if (strcmp(tokenStrValue, "gateway_id") == 0) {
+			if (t[i + 1].type != JSMN_PRIMITIVE) {
+				continue; /* We expect groups to be an array of strings */
+			}
+			gateway_id = atoi(json_str + t[i + 1].start);
+			// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "received userId %d", gateway_id);
+
+			CFG_SetGatewayId(gateway_id);
+			i += t[i + 1].size + 1;
+		}
+		else if (strcmp(tokenStrValue, "key") == 0) {
+			if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+				// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "received ssid %s", tokenStrValue);
+				CFG_SetMQTTPass(tokenStrValue);
+			}
+			i += t[i + 1].size + 1;
+		}
+		else {
+			// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Unexpected key: %.*s", t[i].end - t[i].start,
+			// 	json_str + t[i].start);
+		}
+	}
+	const char *group = "%i/%i";
+	const char *clId = "dev:%i:%i";
+	char groupTopic[20];
+	char ClientId[20];
+	char UserName[20];
+	
+	sprintf(groupTopic, group, group_id, gateway_id);
+	sprintf(ClientId, clId , group_id, gateway_id);
+	sprintf(UserName, "%i" , gateway_id);
+	CFG_SetMQTTUserName(UserName);
+	CFG_SetMQTTGroupTopic(groupTopic);
+	CFG_SetMQTTClientId(ClientId);
+	CFG_SetMQTTPort(1883);
+	CFG_SetMQTTHost("mx.javis.io");
+	CFG_Save_SetupTimer();
+	MQTT_init();
+	os_free(p);
+	os_free(t);
+	return http_rest_succes(request, 200);
+}
 static int http_rest_get_flash(http_request_t* request, int startaddr, int len) {
 	char* buffer;
 	int res;
