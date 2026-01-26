@@ -1375,7 +1375,7 @@ static int http_rest_post_setup_wifi(http_request_t* request) {
 	if ((*wifi_ssid != 0) && (*wifi_pass !=0) )
 		{
 			addLogAdv(LOG_ERROR, LOG_FEATURE_CFG, "Wifi has already been setup - ignoring attempt to reconfigure");
-			return http_rest_error(request, -1, "Wifi has been setup");
+			// return http_rest_error(request, -1, "Wifi has been setup");
 		}
 
 	//https://github.com/zserge/jsmn/blob/master/example/simple.c
