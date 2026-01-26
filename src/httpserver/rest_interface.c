@@ -1373,7 +1373,10 @@ static int http_rest_post_setup_wifi(http_request_t* request) {
 	wifi_ssid = CFG_GetWiFiSSID();
 	wifi_pass = CFG_GetWiFiPass();
 	if ((*wifi_ssid != 0) && (*wifi_pass !=0) )
-		return http_rest_error(request, -1, "Wifi has been setup");
+		{
+			addLogAdv(LOG_ERROR, LOG_FEATURE_CFG, "Wifi has already been setup - ignoring attempt to reconfigure");
+			return http_rest_error(request, -1, "Wifi has been setup");
+		}
 
 	//https://github.com/zserge/jsmn/blob/master/example/simple.c
 	//jsmn_parser p;
