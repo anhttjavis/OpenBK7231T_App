@@ -1089,7 +1089,7 @@ static int http_rest_get_info(http_request_t* request) {
 	hprintf255(request, "\"hardware\":\"%s\",", HARDWARE);
 
 	hprintf255(request, "\"uptime_s\":%d,", g_secondsElapsed);
-	hprintf255(request, "\"build\":\"%s\",", BUILD_NUMBER);
+	hprintf255(request, "\"build\":\"%d\",", BUILD_NUMBER);
 	hprintf255(request, "\"ip\":\"%s\",", HAL_GetMyIPString());
 	hprintf255(request, "\"mac\":\"%s\",", HAL_GetMACStr(macstr));
 	hprintf255(request, "\"flags\":\"%ld\",", *pAllGenericFlags);
@@ -1455,7 +1455,7 @@ static int http_rest_post_setup_wifi(http_request_t* request) {
 	}
 	http_rest_succes(request, 200);
 	CFG_Save_SetupTimer();
-	RESET_ScheduleModuleReset(1);
+	RESET_ScheduleModuleReset(3);
 	os_free(p);
 	os_free(t);
 	return 0;
