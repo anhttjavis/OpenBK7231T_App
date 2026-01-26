@@ -1089,7 +1089,7 @@ static int http_rest_get_info(http_request_t* request) {
 	hprintf255(request, "\"hardware\":\"%s\",", HARDWARE);
 
 	hprintf255(request, "\"uptime_s\":%d,", g_secondsElapsed);
-	hprintf255(request, "\"build\":\"%d\",", BUILD_NUMBER);
+	hprintf255(request, "\"build\":\"%s\",", "0");
 	hprintf255(request, "\"ip\":\"%s\",", HAL_GetMyIPString());
 	hprintf255(request, "\"mac\":\"%s\",", HAL_GetMACStr(macstr));
 	hprintf255(request, "\"flags\":\"%ld\",", *pAllGenericFlags);
