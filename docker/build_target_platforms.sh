@@ -7,12 +7,12 @@ app_ver=${APP_VERSION:-"dev_$(date +%Y%m%d_%H%M%S)"}
 if [ ! -v TARGET_SDKS ]; then
     declare -a target_platforms=(
             "OpenBK7231T"
-            "OpenBK7231N"
-            "OpenXR809"
-            "OpenBL602"
-            "OpenW800"
-            "OpenW600"
-            "OpenLN882H"
+            # "OpenBK7231N"
+            # "OpenXR809"
+            # "OpenBL602"
+            # "OpenW800"
+            # "OpenW600"
+            # "OpenLN882H"
         )
 else
     target_platforms=(${TARGET_SDKS//,/ })
