@@ -80,8 +80,8 @@ static void shift_left_1(uint32_t* x);
 
 
 void init_rest() {
-	HTTP_RegisterCallback("/api/", HTTP_GET, http_rest_get, 1);
-	HTTP_RegisterCallback("/api/", HTTP_POST, http_rest_post, 1);
+	HTTP_RegisterCallback("/api/", HTTP_GET, http_rest_get, 0);
+	HTTP_RegisterCallback("/api/", HTTP_POST, http_rest_post, 0);
 	HTTP_RegisterCallback("/app", HTTP_GET, http_rest_app, 1);
 }
 static const uint8_t char_hash_data[16 * sizeof(uint32_t)] = {
