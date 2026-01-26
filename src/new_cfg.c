@@ -778,7 +778,6 @@ void CFG_SetWebPassword(const char *s) {
 	}
 #endif
 }
-}
 
 int CFG_GetMQTTPortLocal() {
 	return g_cfg.mqtt_port_local;

@@ -93,7 +93,14 @@ const char* HAL_GetMACStr(char* macstr)
 	sprintf(macstr, MACSTR, MAC2STR(mac));
 	return macstr;
 }
-
+const char* HAL_GetMACStrn(char* macstr)
+{
+	unsigned char mac[6];
+	getMAC(mac);
+	sprintf(macstr, MACSTRN, MAC2STR(mac));
+	
+	return macstr;
+}
 char *get_security_type(int type) {
 //void print_security_type(int type) {
 	switch (type)

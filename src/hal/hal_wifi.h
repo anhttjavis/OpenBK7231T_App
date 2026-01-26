@@ -6,6 +6,7 @@
 #endif
 #ifndef MACSTR
 #define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
+#define MACSTRN "%02x%02x%02x%02x%02x%02x"
 #endif
 
 typedef enum HALWifiStatus {

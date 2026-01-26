@@ -1175,6 +1175,17 @@ typedef enum channelType_e {
 #define PLATFORM_GPIO_MAX 29
 #endif
 
+#define VERSION "2.0.5"
+#define BUILD 11
+#define MODEL "JWGU3"
+#define HARDWARE "JWGU_BEKEN_T1_MCU_IPX"
+#define OPEN 0x01
+#define STOP 0x02
+#define CLOSE 0x03
+#define LOCK 0x04
+#define LOCK_STATE 0x01
+#define UNLOCK_STATE 0x00
+
 #define CHANNEL_MAX 64
 
 // Special channel indexes
@@ -1280,6 +1291,21 @@ typedef struct pinsState_s {
 #if MAX_PIN_ROLES < PLATFORM_GPIO_MAX
 #error "MAX_PIN_ROLES < PLATFORM_GPIO_MAX, undefined behaviour"
 #endif
+
+typedef struct stateSave_s {
+	unsigned int time[50];
+	byte state[50];
+	int index;
+} stateSave_t;
+typedef struct Schedule {
+    uint32_t set: 1;
+    uint32_t enabled: 1;
+    uint32_t triggerTime: 11;
+    uint32_t recurrent: 7;
+    uint32_t channelMask: 1;
+    uint32_t channelState: 7;
+    uint32_t passed: 1;
+} schedule_t;
 
 // bit indexes (not values), so 0 1 2 3 4
 #define OBK_FLAG_MQTT_BROADCASTLEDPARAMSTOGETHER	0
@@ -1554,7 +1580,6 @@ typedef struct mainConfig_s {
 	char mqtt_userName_local[32];
 	char mqtt_netid_local[20];
 	char mqtt_pass_local[32];
-	char initCommandLine[256];
 	// offset 0x00000C00 (3072 decimal)
 	char authCode[128];
 	int userId;
@@ -1574,7 +1599,7 @@ typedef struct mainConfig_s {
 
 // one sector is 4096 so it we still have some expand possibility
 #define MAGIC_CONFIG_SIZE_V3		1516  //2016
-#define MAGIC_CONFIG_SIZE_V4		3084  //3584
+#define MAGIC_CONFIG_SIZE_V4		3108  //3584
 
 extern mainConfig_t g_cfg;
 

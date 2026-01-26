@@ -16,6 +16,8 @@
 #include "utils_timer.h"
 //#include "lite-log.h"
 #include "http_client.h"
+#include "../new_pins.h"
+#include "../driver/drv_ntp.h"
 #include "iot_export_errno.h"
 int check_accept;
 bool noti = true;
@@ -1335,6 +1337,117 @@ int HTTPClient_Async_SendPost(const char *url_in, int http_port, const char *con
 
 
 	return 0;
+}
+void Check_TimeCall(int time_state){
+    if (call == false) {
+        return;
+    }
+    if (CFG_GetTimeStart() == CFG_GetTimeEnd()) {
+        return;
+    }
+    struct tm * ltm;
+    int time_int;
+    ltm = localtime((time_t*)&time_state);
+    time_int = ltm->tm_hour*60 + ltm->tm_min;
+    if (CFG_GetTimeStart() > CFG_GetTimeEnd()){
+        if(time_int >= CFG_GetTimeStart() || time_int <= CFG_GetTimeEnd()) {
+            // HTTPClient_Post_Call("open");
+            check_call = 11;
+        }
+    }
+    else {
+        if(time_int >= CFG_GetTimeStart() && time_int <= CFG_GetTimeEnd()) {
+            // HTTPClient_Post_Call("open");
+            check_call = 11;
+        }
+    }
+}
+void Check_TimeNotClose() {
+    if (CFG_GetTimeCheckStart() == CFG_GetTimeCheckEnd()) {
+        return;
+    }
+    if (garage_state == 0) {
+        return;
+    }
+    struct tm * ltm;
+    int time_int;
+    unsigned int time_ntp;
+	time_ntp = g_ntpTime + 25200;
+    ltm = localtime((time_t*)&time_ntp);
+    time_int = ltm->tm_hour*60 + ltm->tm_min;
+    if (CFG_GetTimeCheckStart() > CFG_GetTimeCheckEnd()){
+        if(time_int >= CFG_GetTimeCheckStart() || time_int <= CFG_GetTimeCheckEnd()) {
+            HTTPClient_Post_Notification_No_Set("check_open");
+            check_call = 16;
+        }
+    }
+    else {
+        if(time_int >= CFG_GetTimeCheckStart() && time_int <= CFG_GetTimeCheckEnd()) {
+            HTTPClient_Post_Notification_No_Set("check_open");
+            check_call = 16;
+        }
+    }
+}
+int HTTPClient_Post_Notification(char* state){
+    if (noti == false) {
+        return 0;
+    }
+    char post_data[256];
+    sprintf(post_data, "{\"id\":%i,\"state\":\"%s\",\"key\":\"%s\"}", CFG_GetGatewayId(), state, CFG_GetMQTTPass());
+    HTTPClient_Async_SendPost("HTTP://push.javisco.com/api/rolling-door",
+        80,
+        "application/json",
+        post_data,
+        0);
+    return 0;
+}
+int HTTPClient_Post_Notification_No_Set(char* state){
+    char post_data[256];
+    sprintf(post_data, "{\"id\":%i,\"state\":\"%s\",\"key\":\"%s\"}", CFG_GetGatewayId(), state, CFG_GetMQTTPass());
+    HTTPClient_Async_SendPost("HTTP://push.javisco.com/api/rolling-door",
+        80,
+        "application/json",
+        post_data,
+        0);
+    return 0;
+}
+int HTTPClient_Post_Call(char* state){
+    if (call == false) {
+        return 0;
+    }
+    char post_data[256];
+    sprintf(post_data, "{\"id\":%i,\"state\":\"%s\",\"key\":\"%s\"}", CFG_GetGatewayId(), state, CFG_GetMQTTPass());
+    HTTPClient_Async_SendPost("HTTP://push.javisco.com/api/call-rolling-door",
+        80,
+        "application/json",
+        post_data,
+        0);
+    return 0;
+}
+int HTTPClient_Post_Call_No_Set(char* state){
+    // if (call == false) {
+    //     return 0;
+    // }
+    char post_data[256];
+    sprintf(post_data, "{\"id\":%i,\"state\":\"%s\",\"key\":\"%s\"}", CFG_GetGatewayId(), state, CFG_GetMQTTPass());
+    HTTPClient_Async_SendPost("HTTP://push.javisco.com/api/call-rolling-door",
+        80,
+        "application/json",
+        post_data,
+        0);
+    return 0;
+}
+int HTTPClient_Post_Accept(){
+    char post_data[256];
+    char macstr[3 * 6 + 1];
+    sprintf(post_data, "{\"userId\":%i,\"authCode\":\"%s\",\"mac\":\"%s\",\"ip\":\"%s\"}", CFG_GetuserId(), CFG_GetauthCode(), HAL_GetMACStrn(macstr), HAL_GetMyIPString());
+    HTTPClient_Async_SendPost("HTTP://firmware.javis.io/api/device-setup-accept",
+        80,
+        "application/json",
+        post_data,
+        0);
+    check_accept = 0;
+    return 0;
 }
 
 #endif // ENABLE_SEND_POSTANDGET

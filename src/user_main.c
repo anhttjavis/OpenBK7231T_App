@@ -32,7 +32,7 @@
 #include "httpserver/rest_interface.h"
 #include "mqtt/new_mqtt.h"
 #include "hal/hal_ota.h"
-
+#include "httpclient/http_client.h"
 #if ENABLE_LITTLEFS
 #include "littlefs/our_lfs.h"
 #endif
@@ -41,6 +41,7 @@
 #include "driver/drv_ntp.h"
 #include "driver/drv_ssdp.h"
 #include "driver/drv_uart.h"
+#include "driver/drv_tuyaMCU.h"
 
 #if PLATFORM_BEKEN
 #include <mcu_ps.h>
@@ -65,7 +66,7 @@ extern void WFI(void);
 #elif PLATFORM_ECR6600
 #include "hal_adc.h"
 #endif
-
+#define TIMEDELAY 60
 int g_secondsElapsed = 0;
 // open access point after this number of seconds
 int g_openAP = 0;
@@ -98,7 +99,8 @@ static char g_currentIPString[32] = { 0 };
 static HALWifiStatus_t g_newWiFiStatus = WIFI_UNDEFINED;
 static HALWifiStatus_t g_prevWiFiStatus = WIFI_UNDEFINED;
 static int g_noMQTTTime = 0;
-
+static int time_call_countdown = 0;
+static int count_down = 0;
 uint8_t g_StartupDelayOver = 0;
 
 uint32_t idleCount = 0;
@@ -404,6 +406,54 @@ void RESET_ScheduleModuleReset(int delSeconds) {
 	g_reset = delSeconds;
 }
 
+void processSchedule(int index, time_t now) {
+	struct tm * ltm;
+	int minutes;
+	unsigned int time_ntp;
+	time_ntp = g_ntpTime + 25200;
+	ltm = localtime((time_t*)&time_ntp);
+	minutes = ltm->tm_hour*60 + ltm->tm_min;
+    if (minutes < CFG_GetSchedule(index, "time")) {
+        minutes += 1440;
+    }
+    if (minutes - CFG_GetSchedule(index, "time") < 3) {
+        if (CFG_GetSchedule(index, "passed") == 0) {
+            if (((CFG_GetSchedule(index, "recurrent") >> ltm->tm_wday) & 1) == 1) {
+                int state = CFG_GetSchedule(index, "state");
+				if(state == 0) {
+					// TuyaMCU_SendControlState(LOCK, UNLOCK_STATE);
+					// TuyaMCU_SendControl(CLOSE);
+				}
+				else if(state == 1) {
+					// TuyaMCU_SendControlState(LOCK, UNLOCK_STATE);
+					// TuyaMCU_SendControl(OPEN);
+				}
+            }
+            CFG_SetSchedule(index, "passed", 1);
+        }        
+    }
+    else {
+        CFG_SetSchedule(index, "passed", 0);
+    }
+}
+void processSchedules() {
+	struct tm * ltm;
+	int time_int;
+	unsigned int time_ntp;
+	time_ntp = g_ntpTime + 25200;
+	ltm = localtime((time_t*)&time_ntp);
+	time_int = ltm->tm_hour*60 + ltm->tm_min;
+    
+    if (ltm->tm_year <= 100) {
+        return;
+    }
+    for (int index = 0; index < 8; index++) {
+        if (CFG_GetSchedule(index, "set") && CFG_GetSchedule(index, "enabled")) {
+            processSchedule(index, time_int);
+        }
+    }
+	os_free(ltm);
+}
 
 static char scheduledDriverName[4][16];
 static int scheduledDelay[4] = { -1, -1, -1, -1 };
@@ -1005,6 +1055,59 @@ void Main_OnEverySecond()
 
 	//ADDLOGF_INFO("g_startPingWatchDogAfter %i, g_bPingWatchDogStarted %i ", g_startPingWatchDogAfter, g_bPingWatchDogStarted);
 	if (g_bHasWiFiConnected) {
+				if(check_accept < 5 && check_accept > 0) {
+			check_accept++;
+		}
+		
+		if(check_accept == 5) {
+			HTTPClient_Post_Accept();
+			// HTTPClient_Post_Accept();
+			CFG_SetsendAccept(0);
+			// check_accept = 0;
+		}
+		if(check_call < 20 && check_call > 0 && count_down == 0 ) {
+			check_call++;
+		}
+		if(count_down < 0 || count_down > TIMEDELAY) count_down = 0;
+		if(count_down > 0 ) count_down--;
+		if (check_call == 2) {
+			HTTPClient_Post_Notification("pry");	
+		}
+		if (check_call == 5) {
+			check_call = 0;
+			count_down = TIMEDELAY;
+			//HTTPClient_Post_Notification("pry");
+			HTTPClient_Post_Call_No_Set("pry");	
+		}
+		if (check_call == 7) {
+			HTTPClient_Post_Notification("stuck");	
+		}
+		if (check_call == 10) {
+			check_call = 0;
+			count_down = TIMEDELAY;
+			//HTTPClient_Post_Notification("stuck");
+			HTTPClient_Post_Call_No_Set("stuck");
+		}
+		if (check_call == 15) {
+			check_call = 0;
+			count_down = TIMEDELAY;
+			HTTPClient_Post_Call_No_Set("open");
+		}
+		if (check_call == 20) {
+			check_call = 0;
+			count_down = TIMEDELAY;
+			HTTPClient_Post_Call_No_Set("check_open");
+		}
+		if (check_call_open){
+			if (time_call_countdown == 300) {
+				time_call_countdown = 0;
+				Check_TimeNotClose();
+			}
+			else{
+				time_call_countdown ++;
+			}
+		}
+		processSchedules();
 		if (g_startPingWatchDogAfter) {
 			//ADDLOGF_INFO("g_startPingWatchDogAfter %i", g_startPingWatchDogAfter);
 			g_startPingWatchDogAfter--;

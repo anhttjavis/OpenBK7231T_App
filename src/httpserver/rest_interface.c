@@ -31,7 +31,8 @@ extern uint8_t flash_size_8720;
 #endif
 
 #define MAX_JSON_VALUE_LENGTH   128
-
+#define HASH_SIZE_BITS        	32
+#define MASK_1 					0X7FFFFFFF
 
 int http_rest_error(http_request_t* request, int code, char* msg);
 
@@ -81,6 +82,33 @@ void init_rest() {
 	HTTP_RegisterCallback("/api/", HTTP_GET, http_rest_get, 1);
 	HTTP_RegisterCallback("/api/", HTTP_POST, http_rest_post, 1);
 	HTTP_RegisterCallback("/app", HTTP_GET, http_rest_app, 1);
+}
+static const uint8_t char_hash_data[16 * sizeof(uint32_t)] = {
+    0xE3, 0x04, 0x21, 0x4D, 0xF8, 0x4C, 0xBA, 0xEC, 0x58, 0xCB, 0xB0, 0x5A, 0xA9, 0xFF, 0xCD, 0x97, 
+    0x64, 0x68, 0x68, 0xC0, 0xA0, 0xB8, 0xCE, 0x73, 0x47, 0x7E, 0x91, 0x22, 0xF6, 0xBB, 0x17, 0xB0, 
+    0x47, 0xEE, 0x46, 0xC1, 0x35, 0x37, 0xD9, 0xE4, 0x2B, 0x8E, 0xE1, 0x52, 0x0E, 0xBE, 0x5A, 0xA2, 
+    0x86, 0xE2, 0x6D, 0x5C, 0xE6, 0x50, 0x7B, 0x61, 0xD5, 0x48, 0x9A, 0xBA, 0xD4, 0x57, 0x73, 0x06,  
+};
+
+
+static uint32_t* char_hash_table = (uint32_t*)char_hash_data;
+
+static void shift_left_1(uint32_t* x) {
+    *x = ((*x & MASK_1) << 1) | (*x >> (HASH_SIZE_BITS - 1));
+}
+
+uint32_t hash(const uint8_t* data, unsigned int size) {
+    unsigned int k;
+    uint32_t value = 0;
+    uint8_t item;
+    for (k = 0; k < size; k++) {
+        item = data[k];
+        shift_left_1(&value);
+        value ^= char_hash_table[item & 0x0F];
+        shift_left_1(&value);
+        value ^= char_hash_table[item >> 4];
+    }
+    return value;
 }
 
 /* Extracts string token value into outBuffer (128 char). Returns true if the operation was successful. */
@@ -1480,26 +1508,26 @@ for (i = 1; i < r; i++) {
 						// curtain_position = 100;
 						// garage_state = 1;
 						// MQTT_ReturnState();
-						TuyaMCU_SendControl(OPEN);
+						// TuyaMCU_SendControl(OPEN);
 					}
 					else if (strcmp(tokenStrValue,"close") == 0) {
 						// curtain_position = 0;
 						// garage_state = 0;
 						// MQTT_ReturnState();
-						TuyaMCU_SendControl(CLOSE);
+						// TuyaMCU_SendControl(CLOSE);
 					}
 					else if (strcmp(tokenStrValue,"stop") == 0){
 						// curtain_position = 50;
 						// MQTT_ReturnState();
-						TuyaMCU_SendControl(STOP);
+						// TuyaMCU_SendControl(STOP);
 					}
 					else if (strcmp(tokenStrValue,"lock") == 0){
 						if(curtain_lock == false){
-							TuyaMCU_SendControlState(LOCK, LOCK_STATE);
+							// TuyaMCU_SendControlState(LOCK, LOCK_STATE);
 						}
 						else
 						{
-							TuyaMCU_SendControlState(LOCK, UNLOCK_STATE);
+							// TuyaMCU_SendControlState(LOCK, UNLOCK_STATE);
 						}
 					}
 				}
