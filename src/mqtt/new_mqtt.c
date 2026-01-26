@@ -16,6 +16,9 @@
 #include "../driver/drv_deviceclock.h"
 #include "../driver/drv_tuyaMCU.h"
 #include "../hal/hal_ota.h"
+#include "../httpclient/http_client.h"
+#include "../cJSON/cJSON.h"
+#include "../jsmn/jsmn_h.h"
 #include <math.h>
 #ifndef WINDOWS
 #include <lwip/dns.h>
@@ -96,6 +99,27 @@ static short g_teleSensor_interval = 3;
 // mqtt receive buffer, so we can action in our threads, not
 // in tcp_thread
 //
+#define MAX_JSON_VALUE_LENGTH   128
+#define CONTROL		1
+#define SET_MQTT	2
+#define SET_LINKS	3
+#define GET_LINKS	4
+#define SET_WIFI	5
+#define UPDATE_SYS	6
+#define CONNECT_HC  7
+#define SET_NOTI	8
+#define SET_CALL	9
+#define SET_TIME	10
+#define SET_TIME_CHECK_OPEN 11
+#define SET_CHECK_CALL_OPEN 12
+#define SET_WEBPASS 13
+#define SET_SCHEDULE 14
+#define GET_SCHEDULE 15
+#define DOOR_SENSOR_ENABLE 16
+#define SET_TIME_RELEASE 18
+#define GET_STATE 	1
+#define GET_SYS		2
+
 #define MQTT_RX_BUFFER_MAX 4096
 unsigned char mqtt_rx_buffer[MQTT_RX_BUFFER_MAX];
 int mqtt_rx_buffer_head;
@@ -640,52 +664,531 @@ int channelSet(obk_mqtt_request_t* request) {
 	//int len = request->receivedLen;
 	int channel = 0;
 	int iValue = 0;
-	const char* p;
-	const char *argument;
+	int i;
+	int r;
+	char* pic;
+	struct tm * ltm;
+	unsigned int time_ntp;
+	char* server[128];
+	char* path[256];
+	char tokenStrValue[MAX_JSON_VALUE_LENGTH + 1];
+	int state_control = 0;
+	time_ntp = g_ntpTime + 7 * 60 * 60;
+	// addLogAdv(LOG_DEBUG, LOG_FEATURE_MQTT, "channelSet topic %i with arg %s", request->topic, request->received);
+	int index_value = 0;
+	int set_value = 0;
+	int enabled_value = 0;
+	int time_value = 0;
+	int recurrent_value = 0;
+	int mask_value = 0;
+	int state_value = 0;
+	pic = MQTT_RemoveClientFromTopic(request->topic,0);
 
-	addLogAdv(LOG_DEBUG, LOG_FEATURE_MQTT, "channelSet topic %i with arg %s", request->topic, request->received);
-
-	p = MQTT_RemoveClientFromTopic(request->topic,0);
-
-	if (p == NULL) {
+	if (pic == NULL) {
 		return 0;
 	}
 
-	//addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "channelSet part topic %s", p);
-
-	// atoi won't parse any non-decimal chars, so it should skip over the rest of the topic.
-	channel = atoi(p);
-
-	//addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "channelSet channel %i", channel);
-
-	// if channel out of range, stop here.
-	if ((channel < 0) || (channel > CHANNEL_MAX)) {
+	// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "channelSet part topic %s", pic);
+	if (!(strcmp(pic, "ws") == 0)) {
+		// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "channelSet NOT 'set'");
 		return 0;
 	}
+	jsmn_parser* p = os_malloc(sizeof(jsmn_parser));
+#define TOKEN_COUNT 128
+	jsmntok_t* t = os_malloc(sizeof(jsmntok_t) * TOKEN_COUNT);
+	char* json_str = request->received;
+	int json_len = strlen(json_str);
 
-	// make sure the topic ends with '/set'.
-	p = strchr(p, '/');
+	memset(p, 0, sizeof(jsmn_parser));
+	memset(t, 0, sizeof(jsmntok_t) * 128);
 
-	// if not /set, then stop here
-	if (strcmp(p, "/set")) {
-		//addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "channelSet NOT 'set'");
-		return 0;
+	jsmn_init(p);
+	r = jsmn_parse(p, json_str, json_len, t, TOKEN_COUNT);
+	if (r < 0) {
+		ADDLOG_ERROR(LOG_FEATURE_API, "Failed to parse JSON: %d", r);
+		// sprintf(tmp, "Failed to parse JSON: %d\n", r);
+		os_free(p);
+		os_free(t);
 	}
 
-	addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "MQTT client in mqtt_incoming_data_cb data is %.*s for ch %i\n", MQTT_MAX_DATA_LOG_LENGTH, request->received, channel);
-
-	argument = ((const char*)request->received);
-
-	if (!wal_strnicmp(argument, "toggle", 6)) {
-		CHANNEL_Toggle(channel);
-	}
-	else {
-		iValue = atoi(argument);
-		CHANNEL_Set(channel, iValue, 0);
+	/* Assume the top-level element is an object */
+	if (r < 1 || t[0].type != JSMN_OBJECT) {
+		ADDLOG_ERROR(LOG_FEATURE_API, "Array expected", r);
+		// sprintf(tmp, "Object expected");
+		os_free(p);
+		os_free(t);
 	}
 
-	// return 1 to stop processing callbacks here.
-	// return 0 to allow later callbacks to process this topic.
+	/* Loop over all keys of the root object */
+	int uid;
+	for (i = 1; i < r; i++) {
+		if (tryGetTokenString(json_str, &t[i], tokenStrValue) != true) {
+			ADDLOG_DEBUG(LOG_FEATURE_API, "Parsing failed");
+			continue;
+		}
+		//ADDLOG_DEBUG(LOG_FEATURE_API, "parsed %s", tokenStrValue);
+		// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "MQTT request: %s ", tokenStrValue);
+		if (state_control == CONTROL) {
+			if (strcmp(tokenStrValue,"data") == 0){
+				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+					// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Control: %s ", tokenStrValue);
+					if (strcmp(tokenStrValue,"open") == 0) {
+						if(curtain_lock == false){
+							// TuyaMCU_SendControl(OPEN);
+						}
+					}
+					else if (strcmp(tokenStrValue,"close") == 0) {
+						if(curtain_lock == false){
+							// TuyaMCU_SendControl(CLOSE);
+						}
+						//TuyaMCU_SendControl(CLOSE); //02
+					}
+					else if (strcmp(tokenStrValue,"stop") == 0){
+						if(curtain_lock == false){
+							// TuyaMCU_SendControl(STOP);
+						}
+						//TuyaMCU_SendControl(STOP); //04
+					}
+					else if (strcmp(tokenStrValue,"lock") == 0){
+						// MQTT_ReturnState();
+						if(curtain_lock == false){
+							// TuyaMCU_SendControlState(LOCK, LOCK_STATE);
+						}
+						else
+						{
+							// TuyaMCU_SendControlState(LOCK, UNLOCK_STATE);
+						}
+					}
+					else if (strcmp(tokenStrValue,"rf_add") == 0){
+						// TuyaMCU_SendControl(0x10);
+					}
+					else if (strcmp(tokenStrValue,"rf_del") == 0){
+						// TuyaMCU_SendControl(0x68);
+					}
+					else if (strcmp(tokenStrValue,"reverse") == 0){
+						if(reverse == false){
+							// TuyaMCU_SendControlState(0x6E, 0x01);
+						}
+						else
+						{
+							// TuyaMCU_SendControlState(0x6E, 0x00);
+						}
+					}
+				}
+			}
+			i += t[i + 1].size + 1;
+		}
+		else if (state_control == SET_MQTT) {
+			if (strcmp(tokenStrValue,"broker") == 0){
+				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+					CFG_SetMQTTHostLocal(tokenStrValue);
+				}
+			}
+			else if(strcmp(tokenStrValue,"port") == 0) {
+				int port_local;
+				port_local = atoi(json_str + t[i + 1].start);
+				CFG_SetMQTTPortLocal(port_local);
+			}
+			else if(strcmp(tokenStrValue,"username") == 0) {
+				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+					CFG_SetMQTTUserNameLocal(tokenStrValue);
+				}
+			}
+			else if(strcmp(tokenStrValue,"password") == 0) {
+				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+					CFG_SetMQTTPassLocal(tokenStrValue);
+					CFG_Save_SetupTimer();
+					char netid[20];
+					unsigned char mac[6];
+					getMAC(mac);
+					uint64_t num = 0;
+					for (int index = 0; index < 6; index++) {
+						num = (num << 8) | (byte)mac[index];
+					}
+					sprintf(netid, "%"PRIu64"", num);
+					CFG_SetMQTTNetIdLocal(netid);
+					// MQTT_init_local();
+				}
+			}
+			i += t[i + 1].size + 1;
+		}
+		else if (state_control == SET_SCHEDULE) {
+			if (strcmp(tokenStrValue,"data") == 0){
+				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+				}
+			}
+			else if(strcmp(tokenStrValue,"set") == 0) {
+				set_value = atoi(json_str + t[i + 1].start);
+				addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Set value: %d", set_value);
+			}
+			else if(strcmp(tokenStrValue,"index") == 0) {
+				index_value = atoi(json_str + t[i + 1].start);
+				if (set_value == 0 && index_value >= 0 && index_value < 8) {
+					CFG_SetSchedule(index_value, "set", set_value);
+					CFG_SetSchedule(index_value, "enabled", 0);
+					CFG_SetSchedule(index_value, "time", 0);
+					CFG_SetSchedule(index_value, "recurrent", 0);
+					CFG_SetSchedule(index_value, "mask", 0);
+					CFG_SetSchedule(index_value, "state", 0);
+				}
+                if (index_value < 0) {
+                    for (int i = 0; i < 8; i++) {
+                        if (CFG_GetSchedule(i, "set") == 0) {
+                            index_value = i;
+                            break;
+                        }
+                    }
+                }
+				addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Index value: %d", index_value);
+			}
+			else if(strcmp(tokenStrValue,"enabled") == 0) {
+				enabled_value = atoi(json_str + t[i + 1].start);
+				addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Enable value: %d", enabled_value);
+			}
+			else if(strcmp(tokenStrValue,"time") == 0) {
+				time_value = atoi(json_str + t[i + 1].start);
+				addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Time value: %d", time_value);
+			}
+			else if(strcmp(tokenStrValue,"recurrent") == 0) {
+				recurrent_value = atoi(json_str + t[i + 1].start);
+				addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Recurrent value: %d", recurrent_value);
+			}
+			else if(strcmp(tokenStrValue,"mask") == 0) {
+				mask_value = atoi(json_str + t[i + 1].start);
+				addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Mask value: %d", mask_value);
+			}
+			else if(strcmp(tokenStrValue,"state") == 0) {
+				state_value = atoi(json_str + t[i + 1].start);
+				addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "State value: %d", state_value);
+				if (index_value >= 0 && index_value < 8){
+						CFG_SetSchedule(index_value, "set", set_value);
+						CFG_SetSchedule(index_value, "enabled", enabled_value);
+						CFG_SetSchedule(index_value, "time", time_value);
+						CFG_SetSchedule(index_value, "recurrent", recurrent_value);
+						CFG_SetSchedule(index_value, "mask", mask_value);
+						CFG_SetSchedule(index_value, "state", state_value);
+						MQTT_ReturnSchedule();
+				}
+				else {
+					addLogAdv(LOG_ERROR, LOG_FEATURE_MQTT, "Index value out of range");
+				}
+			}
+			i += t[i + 1].size + 1;
+		}
+		else if (state_control == SET_WIFI) {
+			if (strcmp(tokenStrValue,"ssid") == 0){
+				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+					CFG_SetWiFiSSID(tokenStrValue);
+				}
+			}
+			else if(strcmp(tokenStrValue,"password") == 0) {
+				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+					CFG_SetWiFiPass(tokenStrValue);
+					CFG_Save_SetupTimer();
+					RESET_ScheduleModuleReset(1);
+				}
+			}
+			i += t[i + 1].size + 1;
+		}
+		else if (state_control == UPDATE_SYS) {
+			if (strcmp(tokenStrValue,"server") == 0){
+				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+					// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Server: %s", tokenStrValue);
+					sprintf(server, tokenStrValue);
+				}
+			}
+			else if(strcmp(tokenStrValue,"path") == 0) {
+				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+					sprintf(path,"http://%s%s",server, tokenStrValue);
+					OTA_RequestDownloadFromHTTP(path);
+					// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Path: %s", path);
+				}
+			}
+			i += t[i + 1].size + 1;
+		}
+		else if (state_control == CONNECT_HC) {
+			if (strcmp(tokenStrValue,"name") == 0){
+				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+					// sendDiscoveryHomeassistant(tokenStrValue);
+				}
+			}
+			i += t[i + 1].size + 1;
+		}
+		else if (state_control == SET_NOTI) {
+			if (strcmp(tokenStrValue,"state") == 0){
+				int set_noti;
+				set_noti = atoi(json_str + t[i + 1].start);
+				if (set_noti == 1) {
+					CFG_SetNoti(0);
+					noti = true;
+				}
+				else {
+					CFG_SetNoti(1);
+					noti = false;
+				}
+				MQTT_ReturnState();
+			}
+
+			i += t[i + 1].size + 1;
+		}
+		else if (state_control == SET_CHECK_CALL_OPEN) {
+			if (strcmp(tokenStrValue,"state") == 0){
+				int set_noti;
+				set_noti = atoi(json_str + t[i + 1].start);
+				if (set_noti == 1) {
+					CFG_SetCheckCallOpen(1);
+					check_call_open = true;
+				}
+				else {
+					CFG_SetCheckCallOpen(0);
+					check_call_open = false;
+				}
+				MQTT_ReturnState();
+			}
+			i += t[i + 1].size + 1;
+		}
+		else if (state_control == SET_CALL) {
+			if (strcmp(tokenStrValue,"state") == 0){
+				int set_call;
+				set_call = atoi(json_str + t[i + 1].start);
+				if (set_call == 1) {
+					CFG_SetCall(1);
+					call = true;
+				}
+				else {
+					CFG_SetCall(0);
+					call = false;
+				}
+				MQTT_ReturnState();
+			}
+
+			i += t[i + 1].size + 1;
+		}
+		else if (state_control == SET_TIME) {
+			if (strcmp(tokenStrValue,"time_start") == 0){
+				int set_time;
+				set_time = atoi(json_str + t[i + 1].start);
+				CFG_SetTimeStart(set_time);
+			}
+			else if (strcmp(tokenStrValue,"time_end") == 0){
+				int set_time;
+				set_time = atoi(json_str + t[i + 1].start);
+				CFG_SetTimeEnd(set_time);
+				MQTT_ReturnState();
+			}
+
+			i += t[i + 1].size + 1;
+		}
+		else if (state_control == SET_TIME_CHECK_OPEN) {
+			if (strcmp(tokenStrValue,"time_start") == 0){
+				int set_time;
+				set_time = atoi(json_str + t[i + 1].start);
+				CFG_SetTimeCheckStart(set_time);
+			}
+			else if (strcmp(tokenStrValue,"time_end") == 0){
+				int set_time;
+				set_time = atoi(json_str + t[i + 1].start);
+				CFG_SetTimeCheckEnd(set_time);
+				MQTT_ReturnState();
+			}
+
+			i += t[i + 1].size + 1;
+		}
+		else if (state_control == DOOR_SENSOR_ENABLE) {
+			if (strcmp(tokenStrValue,"state") == 0){
+				int enable;	
+				enable = atoi(json_str + t[i + 1].start);
+				CFG_SetEnableSensor(enable);
+				MQTT_ReturnState();		
+			}
+			i += t[i + 1].size + 1;
+		}
+		else if (state_control == SET_WEBPASS) {
+			if (strcmp(tokenStrValue,"password") == 0){
+				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+					CFG_SetWebPassword(tokenStrValue);
+				}		
+			}
+			i += t[i + 1].size + 1;
+		}
+		else {
+			// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Unexpected key: %.*s", t[i].end - t[i].start,
+			// 	json_str + t[i].start);
+		}
+		if (strcmp(tokenStrValue, "type") == 0) {
+			if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
+				if (!strcmp(tokenStrValue, "get_states")) {
+					MQTT_ReturnState();
+					os_free(p);
+					os_free(t);
+					return 1;
+				}
+				else if (!strcmp(tokenStrValue, "control")){
+					state_control = CONTROL;
+				}
+				else if (!strcmp(tokenStrValue, "get_system")){
+					MQTT_ReturnSys();
+					os_free(p);
+					os_free(t);
+					return 1;
+				}
+				else if (!strcmp(tokenStrValue, "set_mqtt")){
+					state_control = SET_MQTT;
+				}
+				else if (!strcmp(tokenStrValue, "set_links")){
+					state_control = SET_LINKS;
+				}
+				else if (!strcmp(tokenStrValue, "get_links")){
+					state_control = GET_LINKS;
+				}
+				else if (!strcmp(tokenStrValue, "set_wifi")){
+					state_control = SET_WIFI;
+				}
+				else if (!strcmp(tokenStrValue, "wipe_data")){
+					CFG_SetDefaultConfig();
+					CFG_Save_IfThereArePendingChanges();
+					RESET_ScheduleModuleReset(3);
+				}
+				else if (!strcmp(tokenStrValue, "restart")){
+					RESET_ScheduleModuleReset(1);
+				}
+				else if (!strcmp(tokenStrValue, "update_system")){
+					state_control = UPDATE_SYS;
+				}
+				else if (!strcmp(tokenStrValue, "test")){
+					MQTT_ReturnTime();
+				}
+				else if (!strcmp(tokenStrValue, "clear_history")){
+					CFG_ClearSaveState();
+				}
+				else if (!strcmp(tokenStrValue, "connect_hc")){
+					// MQTT_ReturnState_local();
+					state_control = CONNECT_HC;
+				}
+				else if (!strcmp(tokenStrValue, "set_notification")){
+					// MQTT_ReturnState_local();
+					state_control = SET_NOTI;
+				}
+				else if (!strcmp(tokenStrValue, "set_call")){
+					// MQTT_ReturnState_local();
+					state_control = SET_CALL;
+				}
+				else if (!strcmp(tokenStrValue, "set_time_call")){
+					// MQTT_ReturnState_local();
+					state_control = SET_TIME;
+				}
+				else if (!strcmp(tokenStrValue, "set_time_check_open")){
+					// MQTT_ReturnState_local();
+					state_control = SET_TIME_CHECK_OPEN;
+				}
+				else if (!strcmp(tokenStrValue, "set_check_open")){
+					// MQTT_ReturnState_local();
+					state_control = SET_CHECK_CALL_OPEN;
+				}
+				else if (!strcmp(tokenStrValue, "sensor_enable")){
+					// MQTT_ReturnState_local();
+					state_control = DOOR_SENSOR_ENABLE;
+				}
+				else if (!strcmp(tokenStrValue, "set_web_password")){
+					// MQTT_ReturnState_local();
+					state_control = SET_WEBPASS;
+				}
+				else if (!strcmp(tokenStrValue, "set_schedule")){
+					// MQTT_ReturnState_local();
+					state_control = SET_SCHEDULE;
+				}
+				else if (!strcmp(tokenStrValue, "get_schedule")){
+					// MQTT_ReturnState_local();
+					state_control = GET_SCHEDULE;
+					MQTT_ReturnSchedule();
+				}
+				else if (!strcmp(tokenStrValue, "get_history")){
+					int index = g_cfg.savestate.index;
+					unsigned int date_time;
+					cJSON* root;
+					cJSON* stats;
+    				char *msg;
+					
+					stats = cJSON_CreateArray();
+					if (g_cfg.savestate.state[index] != 0){
+						for (int i = index - 1; i >= 0; i--) {
+							root = cJSON_CreateObject();
+							date_time = g_cfg.savestate.time[i];
+							ltm = localtime((time_t*)&date_time);
+							cJSON_AddNumberToObject(root, "year", ltm->tm_year+1900);
+							cJSON_AddNumberToObject(root, "month", ltm->tm_mon+1);
+							cJSON_AddNumberToObject(root, "day", ltm->tm_mday);
+							cJSON_AddNumberToObject(root, "hour", ltm->tm_hour);
+							cJSON_AddNumberToObject(root, "minutes", ltm->tm_min);
+							cJSON_AddNumberToObject(root, "second", ltm->tm_sec);
+							cJSON_AddNumberToObject(root, "state", g_cfg.savestate.state[i]);
+							cJSON_AddItemToArray(stats, root);
+
+						}
+						for (int j = 49; j > index; j--) {
+							root = cJSON_CreateObject();
+							date_time = g_cfg.savestate.time[j];
+							ltm = localtime((time_t*)&date_time);
+							cJSON_AddNumberToObject(root, "year", ltm->tm_year+1900);
+							cJSON_AddNumberToObject(root, "month", ltm->tm_mon+1);
+							cJSON_AddNumberToObject(root, "day", ltm->tm_mday);
+							cJSON_AddNumberToObject(root, "hour", ltm->tm_hour);
+							cJSON_AddNumberToObject(root, "minutes", ltm->tm_min);
+							cJSON_AddNumberToObject(root, "second", ltm->tm_sec);
+							cJSON_AddNumberToObject(root, "state", g_cfg.savestate.state[j]);
+							cJSON_AddItemToArray(stats, root);
+
+						}
+					}
+					else {
+						for (int i = index - 1; i >= 0; i--) {
+							root = cJSON_CreateObject();
+							date_time = g_cfg.savestate.time[i];
+							ltm = localtime((time_t*)&date_time);
+							cJSON_AddNumberToObject(root, "year", ltm->tm_year+1900);
+							cJSON_AddNumberToObject(root, "month", ltm->tm_mon+1);
+							cJSON_AddNumberToObject(root, "day", ltm->tm_mday);
+							cJSON_AddNumberToObject(root, "hour", ltm->tm_hour);
+							cJSON_AddNumberToObject(root, "minutes", ltm->tm_min);
+							cJSON_AddNumberToObject(root, "second", ltm->tm_sec);
+							cJSON_AddNumberToObject(root, "state", g_cfg.savestate.state[i]);
+							cJSON_AddItemToArray(stats, root);
+
+						}
+					}
+					if(stats == NULL){
+						cJSON_Delete(root);
+						cJSON_Delete(stats);
+						os_free(msg);
+						os_free(json_str);
+						os_free(p);
+						os_free(t);
+						os_free(ltm);
+						return 0;
+					}
+					msg = cJSON_PrintUnformatted(stats);
+                	cJSON_Delete(root);
+					cJSON_Delete(stats);
+
+					// MQTT_DoItemPublishString("datetime", dataStr);
+					//addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "History: %s ", msg);
+					//MQTT_DoItemPublishString("history", msg);
+					MQTT_PublishTopicToClientData(mqtt_client, CFG_GetMQTTGroupTopic(), msg);
+					os_free(msg);
+					os_free(json_str);
+					os_free(p);
+					os_free(t);
+					os_free(ltm);
+					return 0;
+				}
+			}
+			i += t[i + 1].size + 1;
+		}
+	}
+	os_free(json_str);
+	os_free(p);
+	os_free(t);
+	os_free(ltm);
 	return 1;
 }
 
@@ -971,6 +1474,83 @@ static OBK_Publish_Result MQTT_PublishTopicToClient(mqtt_client_t* client, const
 // This is used to publish channel values in "obk0696FB33/1/get" format with numerical value,
 // This is also used to publish custom information with string name,
 // for example, "obk0696FB33/voltage/get" is used to publish voltage from the sensor
+
+static OBK_Publish_Result MQTT_PublishTopicToClientData(mqtt_client_t* client, const char* sTopic, const char* sVal)
+{	
+	int flags = 0;
+	bool appendGet = true;
+	err_t err;
+	u8_t qos = 0; /* 0 1 or 2, see MQTT specification */
+	u8_t retain = 0; /* No don't retain such crappy payload... */
+	size_t sVal_len;
+	char* pub_topic;
+	if (client == 0)
+		return OBK_PUBLISH_WAS_DISCONNECTED;
+
+	if (flags & OBK_PUBLISH_FLAG_MUTEX_SILENT)
+	{
+		if (MQTT_Mutex_Take(100) == 0)
+		{
+			return OBK_PUBLISH_MUTEX_FAIL;
+		}
+	}
+	else {
+		if (MQTT_Mutex_Take(500) == 0)
+		{
+			return OBK_PUBLISH_MUTEX_FAIL;
+		}
+	}
+
+	LOCK_TCPIP_CORE();
+	int res = mqtt_client_is_connected(client);
+	UNLOCK_TCPIP_CORE();
+
+	if (res == 0)
+	{
+		g_my_reconnect_mqtt_after_time = 5;
+		MQTT_Mutex_Free();
+		return OBK_PUBLISH_WAS_DISCONNECTED;
+	}
+
+	g_timeSinceLastMQTTPublish = 0;
+
+	pub_topic = (char*)os_malloc(strlen(sTopic) + 6 + 1); //5 for /get
+	if ((pub_topic != NULL))
+	{
+		sprintf(pub_topic, "%s/mqtt", sTopic);
+		LOCK_TCPIP_CORE();
+		err = mqtt_publish(client, pub_topic, sVal, strlen(sVal), qos, retain, mqtt_pub_request_cb, 0);
+		UNLOCK_TCPIP_CORE();
+		os_free(pub_topic);
+
+		if (err != ERR_OK)
+		{
+			if (err == ERR_CONN)
+			{
+				// addLogAdv(LOG_ERROR, LOG_FEATURE_MQTT, "Publish err: ERR_CONN aka %d\n", err);
+			}
+			else if (err == ERR_MEM) {
+				// addLogAdv(LOG_ERROR, LOG_FEATURE_MQTT, "Publish err: ERR_MEM aka %d\n", err);
+				g_memoryErrorsThisSession++;
+			}
+			else {
+				// addLogAdv(LOG_ERROR, LOG_FEATURE_MQTT, "Publish err: %d\n", err);
+			}
+			mqtt_publish_errors++;
+			MQTT_Mutex_Free();
+			return OBK_PUBLISH_MEM_FAIL;
+		}
+		mqtt_published_events++;
+		MQTT_Mutex_Free();
+		return OBK_PUBLISH_OK;
+	}
+	else {
+		MQTT_Mutex_Free();
+		return OBK_PUBLISH_MEM_FAIL;
+	}
+}
+// This is also used to publish custom information with string name,
+
 static OBK_Publish_Result MQTT_PublishMain(mqtt_client_t* client, const char* sChannel, const char* sVal, int flags, bool appendGet)
 {
 	return MQTT_PublishTopicToClient(mqtt_client, CFG_GetMQTTClientId(), sChannel, sVal, flags, appendGet);
@@ -980,6 +1560,135 @@ OBK_Publish_Result MQTT_PublishTele(const char* teleName, const char* teleValue)
 	char topic[64];
 	snprintf(topic, sizeof(topic), "tele/%s", CFG_GetMQTTClientId());
 	return MQTT_PublishTopicToClient(mqtt_client, topic, teleName, teleValue, 0, false);
+}
+OBK_Publish_Result MQTT_ReturnState(){
+	//char dataStr[256];
+	cJSON *json = cJSON_CreateObject();
+	//sprintf(dataStr, "[{\"id\":\"garage.1\",\"state\":\"%s\",\"position\":%i,\"set_time\":%i, \"noti\":%i}]", (garage_state == 1 ? "open": "close"),curtain_position, set_time, (noti ? 1 : 0));
+	//sprintf(dataStr, "[{\"id\":\"garage.1\",\"state\":\"%s\",\"position\":%i,\"door_sensor\":%i,\"lock\":%i,\"sensor\":%i, \"noti\":%i}]", (garage_state == 1 ? "open": "close"), curtain_position, (door_sensor ? 0 : 1), (curtain_lock ? 1:0), (sensor_lock ? 1 : 0) , (noti ? 1 : 0));
+#if defined(JWGU_BEKEN_CBU_MCU_IPX)
+	//sprintf(dataStr, "[{\"id\":\"garage.1\",\"state\":\"%s\",\"position\":%i,\"door_sensor\":%i,\"lock\":%i,\"sensor\":%i,\"noti\":%i,\"call\":%i,\"check_open\":%i,\"time_start\":%i,\"time_end\":%i,\"time_check_start\":%i,\"time_check_end\":%i}]", (garage_state == 1 ? "open": "close"), curtain_position, (door_sensor ? 0 : 1), (curtain_lock ? 1:0), (sensor_lock ? 1 : 0) , (noti ? 1 : 0), (call ? 1 : 0), (check_call_open ? 1 : 0), CFG_GetTimeStart(), CFG_GetTimeEnd(), CFG_GetTimeCheckStart(), CFG_GetTimeCheckEnd());
+	// Add data to the JSON object
+	if(CFG_GetEnableSensor() == 1){
+		if(door_sensor == 0){
+			garage_state = 1;
+			curtain_position = 100;
+		}
+		else{
+			garage_state = 0;
+			curtain_position = 0;
+		}
+	}
+    cJSON_AddStringToObject(json, "id", "garage.1");
+    cJSON_AddStringToObject(json, "state", garage_state == 1 ? "open" : "closed");
+    // cJSON_AddNumberToObject(json, "position", curtain_position);
+	cJSON_AddNumberToObject(json, "sensor_enable", CFG_GetEnableSensor());
+    cJSON_AddNumberToObject(json, "door_sensor", (door_sensor ? 0 : 1));
+    cJSON_AddNumberToObject(json, "lock", curtain_lock ? 1 : 0);
+    cJSON_AddNumberToObject(json, "sensor", (sensor_lock ? 1 : 0));
+    cJSON_AddNumberToObject(json, "noti", noti ? 1 : 0);
+    cJSON_AddNumberToObject(json, "call", call ? 1 : 0);
+    cJSON_AddNumberToObject(json, "check_open", check_call_open ? 1 : 0);
+    cJSON_AddNumberToObject(json, "time_start", CFG_GetTimeStart());
+    cJSON_AddNumberToObject(json, "time_end", CFG_GetTimeEnd());
+    cJSON_AddNumberToObject(json, "time_check_start", CFG_GetTimeCheckStart());
+    cJSON_AddNumberToObject(json, "time_check_end", CFG_GetTimeCheckEnd());
+#elif defined(JWGU_BEKEN_CBU_MCU)
+	cJSON_AddStringToObject(json, "id", "garage.1");
+	cJSON_AddStringToObject(json, "state", garage_state == 1 ? "open" : "closed");
+	// cJSON_AddNumberToObject(json, "position", curtain_position);
+	cJSON_AddNumberToObject(json, "lock", curtain_lock ? 1 : 0);
+	cJSON_AddNumberToObject(json, "set_time", set_time);
+	cJSON_AddNumberToObject(json, "noti", noti ? 1 : 0);
+#endif
+	cJSON *json_array = cJSON_CreateArray();
+
+    // Add the JSON object to the JSON array
+    cJSON_AddItemToArray(json_array, json);
+
+    // Print the JSON array string
+    char *dataStr = cJSON_PrintUnformatted(json_array);
+	cJSON_Delete(json);
+	cJSON_Delete(json_array);
+	MQTT_PublishTopicToClientData(mqtt_client, CFG_GetMQTTGroupTopic(), dataStr);
+	os_free(dataStr);
+	return 0;
+}
+OBK_Publish_Result MQTT_ReturnSchedule(){
+	cJSON *json_array = cJSON_CreateArray();
+	for(int  i = 0; i < 8; i++){
+        cJSON *json = cJSON_CreateObject();
+        cJSON_AddNumberToObject(json, "index", i);
+        cJSON_AddNumberToObject(json, "set", CFG_GetSchedule(i, "set"));
+        cJSON_AddNumberToObject(json, "enabled", CFG_GetSchedule(i, "enabled"));
+        cJSON_AddNumberToObject(json, "time", CFG_GetSchedule(i, "time"));
+        cJSON_AddNumberToObject(json, "recurrent", CFG_GetSchedule(i, "recurrent"));
+        cJSON_AddNumberToObject(json, "mask", CFG_GetSchedule(i, "mask"));
+        cJSON_AddNumberToObject(json, "state", CFG_GetSchedule(i, "state"));
+		cJSON_AddItemToArray(json_array, json);
+	}
+    char *dataStr = cJSON_PrintUnformatted(json_array);
+	cJSON_Delete(json_array);
+	MQTT_PublishTopicToClientData(mqtt_client, CFG_GetMQTTGroupTopic(), dataStr);
+	os_free(dataStr);
+	return 0;
+}
+
+OBK_Publish_Result MQTT_ReturnSys()
+{
+	//char dataStr[512];
+	char macstr[3 * 6 + 1];
+	unsigned char mac[6];
+	getMAC(mac);
+	uint64_t num = 0;
+	for (int index = 0; index < 6; index++) {
+		num = (num << 8) | (byte)mac[index];
+	}
+	//addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Time id: %d\n", g_ntpTime);
+	//sprintf(dataStr, "{\"model\":\"JWGP\",\"version\":\"1.0.5\",\"build\":63,\"hardware\":\"JWGP_BEKEN_WB3S_IO_01678ABENO\",\"ip\":\"%s\",\"mac\":\"%s\",\"netid\":\"%"PRIu64"\",\"wifi_name\":\"%s\",\"mqtt\":{\"broker\":\"%s\",\"port\":%d,\"username\":\"%s\",\"password\":\"%s\"},\"privatekey\":\"%s\"}", HAL_GetMyIPString(), HAL_GetMACStrn(macstr), num, CFG_GetWiFiSSID(), CFG_GetMQTTHostLocal(), CFG_GetMQTTPort(), CFG_GetMQTTUserNameLocal(), CFG_GetMQTTPassLocal(),CFG_GetMQTTPass());
+	 cJSON *json = cJSON_CreateObject();
+
+    // Add data to the JSON object
+    cJSON_AddStringToObject(json, "model", MODEL);
+    cJSON_AddStringToObject(json, "version", USER_SW_VER);
+    cJSON_AddNumberToObject(json, "build", BUILD_NUMBER);
+    cJSON_AddStringToObject(json, "hardware", HARDWARE);
+    cJSON_AddStringToObject(json, "ip", HAL_GetMyIPString());
+    cJSON_AddStringToObject(json, "mac", HAL_GetMACStrn(macstr));
+    char num_str[21];  // Buffer to hold the string representation of num
+    sprintf(num_str, "%" PRIu64, num);
+    cJSON_AddStringToObject(json, "netid", num_str);
+    cJSON_AddStringToObject(json, "wifi_name", CFG_GetWiFiSSID());
+
+    // Create MQTT object
+    cJSON *mqtt = cJSON_CreateObject();
+    cJSON_AddStringToObject(mqtt, "broker", CFG_GetMQTTHostLocal());
+    cJSON_AddNumberToObject(mqtt, "port", CFG_GetMQTTPort());
+    cJSON_AddStringToObject(mqtt, "username", CFG_GetMQTTUserNameLocal());
+    cJSON_AddStringToObject(mqtt, "password", CFG_GetMQTTPassLocal());
+    cJSON_AddItemToObject(json, "mqtt", mqtt);
+
+    //cJSON_AddStringToObject(json, "privatekey", CFG_GetMQTTPass());
+	//cJSON_AddStringToObject(json, "webpassword", CFG_GetWebPassword());
+	char *dataStr = cJSON_PrintUnformatted(json);
+	cJSON_Delete(json);
+	cJSON_Delete(mqtt);
+	//HAL_PrintNetworkInfo();
+	addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Key: %s\n",CFG_GetMQTTPass()); 
+	addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Ping host: %s, pingsecond:%d\n", CFG_GetPingHost(), CFG_GetPingDisconnectedSecondsToRestart());
+	MQTT_PublishTopicToClientData(mqtt_client, CFG_GetMQTTGroupTopic(), dataStr);
+	os_free(dataStr);
+	return 0;
+	
+}
+OBK_Publish_Result MQTT_ReturnTime()
+
+{
+    struct tm * ltm;
+	unsigned int time_ntp;
+	char dataStr[128];
+	sprintf(dataStr, "free: %d", xPortGetFreeHeapSize());
+	return MQTT_DoItemPublishString("freeheap", dataStr);
 }
 OBK_Publish_Result MQTT_PublishStat(const char* statName, const char* statValue)
 {

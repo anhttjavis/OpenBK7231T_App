@@ -164,6 +164,10 @@ OBK_Publish_Result MQTT_PublishStat(const char* statName, const char* statValue)
 OBK_Publish_Result MQTT_PublishTele(const char* teleName, const char* teleValue);
 void MQTT_InvokeCommandAtEnd(PostPublishCommands command);
 bool MQTT_IsReady();
+OBK_Publish_Result MQTT_ReturnState();
+OBK_Publish_Result MQTT_ReturnSys();
+OBK_Publish_Result MQTT_ReturnTime();
+static OBK_Publish_Result MQTT_PublishTopicToClientData(mqtt_client_t* client, const char* sTopic, const char* sVal);
 extern int g_mqtt_bBaseTopicDirty;
 extern int mqtt_reconnect;
 extern int mqtt_loopsWithDisconnected;

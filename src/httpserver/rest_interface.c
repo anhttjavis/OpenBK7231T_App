@@ -68,6 +68,7 @@ static int http_rest_get_info(http_request_t* request);
 
 static int http_rest_post_channels(http_request_t* request);
 static int http_rest_get_channels(http_request_t* request);
+static int http_rest_get_channel(http_request_t* request);
 
 static int http_rest_post_cmd(http_request_t* request);
 
@@ -1062,10 +1063,23 @@ static int http_rest_post_logconfig(http_request_t* request) {
 static int http_rest_get_info(http_request_t* request) {
 	char macstr[3 * 6 + 1];
 	long int* pAllGenericFlags = (long int*)&g_cfg.genericFlags;
-
+	unsigned char mac[6];
+	getMAC(mac);
+    uint64_t num = 0;
+    for (int index = 0; index < 6; index++) {
+        num = (num << 8) | (byte)mac[index];
+    }
 	http_setup(request, httpMimeTypeJson);
+	hprintf255(request, "{\"device_id\":\"%s\",", HAL_GetMACStrn(macstr));
+	hprintf255(request, "\"type\":\"Generic Wi-Fi Device\",");
+	hprintf255(request, "\"netid\":\"%"PRIu64"\",", num);
+	hprintf255(request, "\"model\":\"%s\",",MODEL);
+	hprintf255(request, "\"version\":\"%s\",", USER_SW_VER);
+	hprintf255(request, "\"code\":\"%"PRIu32"\",", hash((const uint8_t*)(macstr),strlen(macstr)));
+	hprintf255(request, "\"hardware\":\"%s\"}", HARDWARE);
+
 	hprintf255(request, "{\"uptime_s\":%d,", g_secondsElapsed);
-	hprintf255(request, "\"build\":\"%s\",", g_build_str);
+	hprintf255(request, "\"build\":\"%s\",", BUILD_NUMBER);
 	hprintf255(request, "\"ip\":\"%s\",", HAL_GetMyIPString());
 	hprintf255(request, "\"mac\":\"%s\",", HAL_GetMACStr(macstr));
 	hprintf255(request, "\"flags\":\"%ld\",", *pAllGenericFlags);
@@ -1702,6 +1716,39 @@ static int http_rest_get_channels(http_request_t* request) {
 		}
 	}
 	poststr(request, "}");
+	poststr(request, NULL);
+	return 0;
+}
+
+static int http_rest_get_channel(http_request_t* request) {
+	int i;
+	/*typedef struct pinsState_s {
+		byte roles[32];
+		byte channels[32];
+	} pinsState_t;
+
+	extern pinsState_t g_pins;
+	*/
+	http_setup(request, httpMimeTypeJson);
+	poststr(request, "[{");
+
+	// TODO: maybe we should cull futher channels that are not used?
+	// I support many channels because I plan to use 16x relays module with I2C MCP23017 driver
+	// for (i = 1; i < 4; i++) {
+	// 	// "i" is a pin index
+	// 	// Get channel index and role
+	// 	if (1) {
+	// 		if (addcomma) {
+	// 			hprintf255(request, ",");
+	// 		}
+	// 		hprintf255(request, "{\"id\":\"switch.%d\",\"state\":\"%s\"}", i, ((CHANNEL_Get(i) == 0) ? "off":"on"));
+	// 		addcomma = 1;
+	// 	}
+	// }
+	hprintf255(request, "\"id\":\"garage.1\",");
+	hprintf255(request, "\"state\":\"%s\",", (garage_state == 1 ? "open": "close"));
+	hprintf255(request, "\"position\":%i", curtain_position);
+	poststr(request, "}]");
 	poststr(request, NULL);
 	return 0;
 }
