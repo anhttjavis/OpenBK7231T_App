@@ -1086,9 +1086,9 @@ static int http_rest_get_info(http_request_t* request) {
 	hprintf255(request, "\"model\":\"%s\",",MODEL);
 	hprintf255(request, "\"version\":\"%s\",", USER_SW_VER);
 	hprintf255(request, "\"code\":\"%"PRIu32"\",", hash((const uint8_t*)(macstr),strlen(macstr)));
-	hprintf255(request, "\"hardware\":\"%s\"}", HARDWARE);
+	hprintf255(request, "\"hardware\":\"%s\",", HARDWARE);
 
-	hprintf255(request, "{\"uptime_s\":%d,", g_secondsElapsed);
+	hprintf255(request, "\"uptime_s\":%d,", g_secondsElapsed);
 	hprintf255(request, "\"build\":\"%s\",", BUILD_NUMBER);
 	hprintf255(request, "\"ip\":\"%s\",", HAL_GetMyIPString());
 	hprintf255(request, "\"mac\":\"%s\",", HAL_GetMACStr(macstr));
