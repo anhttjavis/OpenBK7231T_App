@@ -1029,7 +1029,18 @@ void CFG_SetSaveState(unsigned int time, byte state) {
 }
 
 void setupCurtainPins() {
-	CFG_ClearPins();
+	DRV_StartDriver("TuyaMCU");
+	UART_InitUART(9600, 0);
+	// CMD_ExecuteCommand("tuyaMcu_defWiFiState 4", 0);
+	CHANNEL_SetType(1, 6);
+	CHANNEL_SetType(2, 6);
+	CHANNEL_SetType(3, 6);
+	CHANNEL_SetType(4, 6);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 1 bool 1", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 2 bool 2", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 3 bool 3", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 4 bool 4", 0);
+	// CFG_ClearPins();
 	CFG_Save_SetupTimer();
 	
 }

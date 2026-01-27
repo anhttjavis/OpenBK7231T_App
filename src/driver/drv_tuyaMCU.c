@@ -1990,6 +1990,7 @@ void TuyaMCU_ProcessIncoming(const byte* data, int len) {
 		return;
 	}
 	cmd = data[3];
+	byte set = data[4];
 	addLogAdv(LOG_INFO, LOG_FEATURE_TUYAMCU, "ProcessIncoming[v=%i]: cmd %i (%s) len %i\n", version, cmd, TuyaMCU_GetCommandTypeLabel(cmd), len);
 	switch (cmd)
 	{
@@ -2068,6 +2069,13 @@ void TuyaMCU_ProcessIncoming(const byte* data, int len) {
 		addLogAdv(LOG_INFO, LOG_FEATURE_TUYAMCU, "ProcessIncoming: 0x04 replying");
 		// added for https://www.elektroda.com/rtvforum/viewtopic.php?p=21095905#21095905
 		TuyaMCU_SendCommandWithData(0x04, 0, 0);
+		if (set == 0x00) {
+			CFG_SetWiFiPass("");
+			CFG_SetWiFiSSID("");
+			CFG_Save_SetupTimer();
+			Main_Init_After_Delay();
+			Tuya_SetWifiState(0x00);
+		}
 		break;
 	case 0x22:
 		{
