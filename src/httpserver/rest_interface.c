@@ -137,15 +137,6 @@ static int http_rest_get(http_request_t* request) {
 	if (!strcmp(request->url, "api/channels")) {
 		return http_rest_get_channels(request);
 	}
-	if (!strcmp(request->url, "api/setup-wifi")) {
-		return http_rest_post_setup_wifi(request);
-	}	
-	if (!strcmp(request->url, "api/control")) {
-		return http_rest_post_control_device(request);
-	}
-	if (!strcmp(request->url, "api/setup")) {
-		return http_rest_post_setup_mqtt(request);
-	}
 	if (!strcmp(request->url, "api/pins")) {
 		return http_rest_get_pins(request);
 	}
@@ -219,7 +210,15 @@ static int http_rest_post(http_request_t* request) {
 	if (!strcmp(request->url, "api/channels")) {
 		return http_rest_post_channels(request);
 	}
-	
+		if (!strcmp(request->url, "api/setup-wifi")) {
+		return http_rest_post_setup_wifi(request);
+	}	
+	if (!strcmp(request->url, "api/control")) {
+		return http_rest_post_control_device(request);
+	}
+	if (!strcmp(request->url, "api/setup")) {
+		return http_rest_post_setup_mqtt(request);
+	}
 	if (!strcmp(request->url, "api/pins")) {
 		return http_rest_post_pins(request);
 	}
