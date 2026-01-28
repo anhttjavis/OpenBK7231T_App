@@ -2587,8 +2587,8 @@ void MQTT_InitCallbacks() {
 	groupId = CFG_GetMQTTGroupTopic();
 
 	// register the main set channel callback
-	snprintf(cbtopicbase, sizeof(cbtopicbase), "%s/ws", clientId);
-	snprintf(cbtopicsub, sizeof(cbtopicsub), "%s/ws", clientId);
+	snprintf(cbtopicbase, sizeof(cbtopicbase), "%s/ws", groupId);
+	snprintf(cbtopicsub, sizeof(cbtopicsub), "%s/ws", groupId);
 	// note: this may REPLACE an existing entry with the same ID.  ID 1 !!!
 	MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 0, channelSet);
 
