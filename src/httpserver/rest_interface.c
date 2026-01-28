@@ -1075,8 +1075,8 @@ static int http_rest_get_info(http_request_t* request) {
 	uint64_t num = 0;
 
 	// Get MAC address and validate
-		return http_rest_error(request, 500, "Failed to retrieve MAC address");
 	if (!getMAC(mac)) {
+		return http_rest_error(request, 500, "Failed to retrieve MAC address");
 	}
 
 	// Calculate netid from MAC address
