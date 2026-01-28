@@ -1071,7 +1071,6 @@ static int http_rest_post_logconfig(http_request_t* request) {
 
 static int http_rest_get_info(http_request_t* request) {
 	char macstr[3 * 6 + 1];
-	long int* pAllGenericFlags = (long int*)&g_cfg.genericFlags;
 	unsigned char mac[6];
 	getMAC(mac);
     uint64_t num = 0;
@@ -1083,32 +1082,12 @@ static int http_rest_get_info(http_request_t* request) {
 	hprintf255(request, "\"type\":\"Generic Wi-Fi Device\",");
 	hprintf255(request, "\"netid\":\"%"PRIu64"\",", num);
 	hprintf255(request, "\"model\":\"%s\",",MODEL);
+	hprintf255(request, "\"chipset\":\"BK7231T\",");
 	hprintf255(request, "\"version\":\"%s\",", USER_SW_VER);
 	hprintf255(request, "\"code\":\"%"PRIu32"\",", hash((const uint8_t*)(macstr),strlen(macstr)));
-	hprintf255(request, "\"hardware\":\"%s\",", HARDWARE);
-
-	hprintf255(request, "\"uptime_s\":%d,", g_secondsElapsed);
-	hprintf255(request, "\"build\":\"%s\",", "0");
-	hprintf255(request, "\"ip\":\"%s\",", HAL_GetMyIPString());
-	hprintf255(request, "\"mac\":\"%s\",", HAL_GetMACStr(macstr));
-	hprintf255(request, "\"flags\":\"%ld\",", *pAllGenericFlags);
-	hprintf255(request, "\"mqtthost\":\"%s:%d\",", CFG_GetMQTTHost(), CFG_GetMQTTPort());
-	hprintf255(request, "\"mqtttopic\":\"%s\",", CFG_GetMQTTClientId());
-	hprintf255(request, "\"chipset\":\"%s\",", PLATFORM_MCU_NAME);
-	hprintf255(request, "\"webapp\":\"%s\",", CFG_GetWebappRoot());
-	hprintf255(request, "\"shortName\":\"%s\",", CFG_GetShortDeviceName());
-	poststr(request, "\"startcmd\":\"");
-	// This can be longer than 255
-	poststr_escapedForJSON(request, CFG_GetShortStartupCommand());
-	poststr(request, "\",");
-#ifndef OBK_DISABLE_ALL_DRIVERS
-	hprintf255(request, "\"supportsSSDP\":%d,", DRV_IsRunning("SSDP") ? 1 : 0);
-#else
-	hprintf255(request, "\"supportsSSDP\":0,");
-#endif
-
-	hprintf255(request, "\"supportsClientDeviceDB\":true}");
-
+	hprintf255(request, "\"build\":%d,", BUILD_NUMBER);
+	hprintf255(request, "\"hardware\":\"%s\"}", HARDWARE);
+	
 	poststr(request, NULL);
 	return 0;
 }
