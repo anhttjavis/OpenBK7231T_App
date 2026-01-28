@@ -1082,7 +1082,7 @@ static int http_rest_get_info(http_request_t* request) {
 	hprintf255(request, "\"type\":\"Generic Wi-Fi Device\",");
 	hprintf255(request, "\"netid\":\"%"PRIu64"\",", num);
 	hprintf255(request, "\"model\":\"%s\",",MODEL);
-	hprintf255(request, "\"chipset\":\"BK7231T\",");
+	hprintf255(request, "\"chipset\":\"%s\",", PLATFORM_MCU_NAME);
 	hprintf255(request, "\"version\":\"%s\",", USER_SW_VER);
 	hprintf255(request, "\"code\":\"%"PRIu32"\",", hash((const uint8_t*)(macstr),strlen(macstr)));
 	hprintf255(request, "\"build\":%d,", BUILD_NUMBER);
