@@ -1073,7 +1073,7 @@ static int http_rest_get_info(http_request_t* request) {
 	char macstr[3 * 6 + 1] = {0};
 	unsigned char mac[6] = {0};
 	uint64_t num = 0;
-
+	ADDLOG_DEBUG(LOG_FEATURE_API, "request api/info", mac);
 	getMAC(mac);
 	ADDLOG_DEBUG(LOG_FEATURE_API, "api/info- mac:%s", mac);
 	// Calculate netid from MAC address
