@@ -2579,28 +2579,28 @@ void MQTT_InitCallbacks() {
 	groupId = CFG_GetMQTTGroupTopic();
 
 	// register the main set channel callback
-	snprintf(cbtopicbase, sizeof(cbtopicbase), "%s/", clientId);
-	snprintf(cbtopicsub, sizeof(cbtopicsub), "%s/+/set", clientId);
+	snprintf(cbtopicbase, sizeof(cbtopicbase), "%s/ws", clientId);
+	snprintf(cbtopicsub, sizeof(cbtopicsub), "%s/ws", clientId);
 	// note: this may REPLACE an existing entry with the same ID.  ID 1 !!!
-	MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 1, channelSet);
+	MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 0, channelSet);
 
 	// so-called "Group topic", a secondary topic that can be set on multiple devices 
 	// to control them together
 	// register the TAS cmnd callback
-	if (*groupId) {
-		// register the main set channel callback
-		snprintf(cbtopicbase, sizeof(cbtopicbase), "%s/", groupId);
-		snprintf(cbtopicsub, sizeof(cbtopicsub), "%s/+/set", groupId);
-		// note: this may REPLACE an existing entry with the same ID.  ID 2 !!!
-		MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 2, channelSet);
-	}
+	// if (*groupId) {
+	// 	// register the main set channel callback
+	// 	snprintf(cbtopicbase, sizeof(cbtopicbase), "%s/", groupId);
+	// 	snprintf(cbtopicsub, sizeof(cbtopicsub), "%s/+/set", groupId);
+	// 	// note: this may REPLACE an existing entry with the same ID.  ID 2 !!!
+	// 	MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 2, channelSet);
+	// }
 
-	// base topic
-	// register the TAS cmnd callback
-	snprintf(cbtopicbase, sizeof(cbtopicbase), "cmnd/%s/", clientId);
-	snprintf(cbtopicsub, sizeof(cbtopicsub), "cmnd/%s/+", clientId);
-	// note: this may REPLACE an existing entry with the same ID.  ID 3 !!!
-	MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 3, tasCmnd);
+	// // base topic
+	// // register the TAS cmnd callback
+	// snprintf(cbtopicbase, sizeof(cbtopicbase), "cmnd/%s/", clientId);
+	// snprintf(cbtopicsub, sizeof(cbtopicsub), "cmnd/%s/+", clientId);
+	// // note: this may REPLACE an existing entry with the same ID.  ID 3 !!!
+	// MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 3, tasCmnd);
 
 	// so-called "Group topic", a secondary topic that can be set on multiple devices 
 	// to control them together
@@ -2609,32 +2609,32 @@ void MQTT_InitCallbacks() {
 		snprintf(cbtopicbase, sizeof(cbtopicbase), "cmnd/%s/", groupId);
 		snprintf(cbtopicsub, sizeof(cbtopicsub), "cmnd/%s/+", groupId);
 		// note: this may REPLACE an existing entry with the same ID.  ID 4 !!!
-		MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 4, tasCmnd);
+		MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 1, tasCmnd);
 	}
 
 	// register the getter callback (send empty message here to get reply)
 	snprintf(cbtopicbase, sizeof(cbtopicbase), "%s/", clientId);
 	snprintf(cbtopicsub, sizeof(cbtopicsub), "%s/+/get", clientId);
 	// note: this may REPLACE an existing entry with the same ID.  ID 5 !!!
-	MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 5, channelGet);
+	MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 2, channelGet);
 
-	if (CFG_HasFlag(OBK_FLAG_DO_TASMOTA_TELE_PUBLISHES)) {
-		// test hack iobroker
-		snprintf(cbtopicbase, sizeof(cbtopicbase), "tele/%s/", clientId);
-		snprintf(cbtopicsub, sizeof(cbtopicsub), "tele/%s/+", clientId);
-		// note: this may REPLACE an existing entry with the same ID.  ID 6 !!!
-		MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 6, tasCmnd);
+	// if (CFG_HasFlag(OBK_FLAG_DO_TASMOTA_TELE_PUBLISHES)) {
+	// 	// test hack iobroker
+	// 	snprintf(cbtopicbase, sizeof(cbtopicbase), "tele/%s/", clientId);
+	// 	snprintf(cbtopicsub, sizeof(cbtopicsub), "tele/%s/+", clientId);
+	// 	// note: this may REPLACE an existing entry with the same ID.  ID 6 !!!
+	// 	MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 6, tasCmnd);
 
-		// test hack iobroker
-		snprintf(cbtopicbase, sizeof(cbtopicbase), "stat/%s/", clientId);
-		snprintf(cbtopicsub, sizeof(cbtopicsub), "stat/%s/+", clientId);
-		// note: this may REPLACE an existing entry with the same ID.  ID 7 !!!
-		MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 7, tasCmnd);
-	}
-	// test hack iobroker
-	snprintf(cbtopicbase, sizeof(cbtopicbase), "homeassistant/");
-	snprintf(cbtopicsub, sizeof(cbtopicsub), "homeassistant/+");
-	MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 8, onHassStatus);
+	// 	// test hack iobroker
+	// 	snprintf(cbtopicbase, sizeof(cbtopicbase), "stat/%s/", clientId);
+	// 	snprintf(cbtopicsub, sizeof(cbtopicsub), "stat/%s/+", clientId);
+	// 	// note: this may REPLACE an existing entry with the same ID.  ID 7 !!!
+	// 	MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 7, tasCmnd);
+	// }
+	// // test hack iobroker
+	// snprintf(cbtopicbase, sizeof(cbtopicbase), "homeassistant/");
+	// snprintf(cbtopicsub, sizeof(cbtopicsub), "homeassistant/+");
+	// MQTT_RegisterCallback(cbtopicbase, cbtopicsub, 8, onHassStatus);
 }
  // initialise things MQTT
  // called from user_main
