@@ -1072,11 +1072,11 @@ static int http_rest_post_logconfig(http_request_t* request) {
 static int http_rest_get_info(http_request_t* request) {
 	char macstr[3 * 6 + 1] = {0};
 	unsigned char mac[6] = {0};
-	uint64_t num = 0;
+	unsigned long int num = 0;
 	getMAC(mac);
 	// Calculate netid from MAC address
 	for (int index = 0; index < 6; index++) {
-		num = (num << 8) | (uint64_t)mac[index];
+		num = (num << 8) | (unsigned long int)mac[index];
 	}
 
 	// Get MAC string and validate
@@ -1088,7 +1088,7 @@ static int http_rest_get_info(http_request_t* request) {
 	http_setup(request, httpMimeTypeJson);
 	hprintf255(request, "{\"device_id\":\"%s\",", macstr);
 	hprintf255(request, "\"type\":\"Generic Wi-Fi Device\",");
-	hprintf255(request, "\"netid\":\"%"PRIu64"\",", num);
+	hprintf255(request, "\"netid\":\"%llu\",", num);
 	hprintf255(request, "\"model\":\"%s\",", MODEL);
 	hprintf255(request, "\"chipset\":\"%s\",", PLATFORM_MCU_NAME);
 	// hprintf255(request, "\"version\":\"%s\",", USER_SW_VER);
