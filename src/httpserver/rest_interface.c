@@ -1070,26 +1070,44 @@ static int http_rest_post_logconfig(http_request_t* request) {
 
 
 static int http_rest_get_info(http_request_t* request) {
-	char macstr[3 * 6 + 1];
-	unsigned char mac[6];
-	getMAC(mac);
-    uint64_t num = 0;
-    for (int index = 0; index < 6; index++) {
-        num = (num << 8) | (byte)mac[index];
-    }
+	char macstr[3 * 6 + 1] = {0};
+	unsigned char mac[6] = {0};
+	uint64_t num = 0;
+
+	// Get MAC address and validate
+		return http_rest_error(request, 500, "Failed to retrieve MAC address");
+	if (!getMAC(mac)) {
+	}
+
+	// Calculate netid from MAC address
+	for (int index = 0; index < 6; index++) {
+		num = (num << 8) | (uint64_t)mac[index];
+	}
+
+	// Get device name and validate
+	const char* deviceName = CFG_GetDeviceName();
+	if (!deviceName) {
+		deviceName = "Unknown Device";
+	}
+
+	// Get MAC string and validate
+	if (!HAL_GetMACStrn(macstr)) {
+		return http_rest_error(request, 500, "Failed to retrieve MAC string");
+	}
+
+	// Setup HTTP response
 	http_setup(request, httpMimeTypeJson);
-	hprintf255(request, "{\"device_id\":\"%s\",", HAL_GetMACStrn(macstr));
+	hprintf255(request, "{\"device_id\":\"%s\",", macstr);
 	hprintf255(request, "\"type\":\"Generic Wi-Fi Device\",");
-	hprintf255(request, "\"netid\":\"%"PRIu64"\",", num);
-	hprintf255(request, "\"model\":\"%s\",",MODEL);
+	hprintf255(request, "\"netid\":\"%" PRIu64 "\",", num);
+	hprintf255(request, "\"model\":\"%s\",", MODEL);
 	hprintf255(request, "\"chipset\":\"%s\",", PLATFORM_MCU_NAME);
 	hprintf255(request, "\"version\":\"%s\",", USER_SW_VER);
-	// hprintf255(request, "\"version\":\"%s\",", "1.0.0");
-	hprintf255(request, "\"code\":\"%"PRIu32"\",", hash((const uint8_t*)(macstr),strlen(macstr)));
+	hprintf255(request, "\"code\":\"%" PRIu32 "\",", hash((const uint8_t*)(macstr), strlen(macstr)));
 	hprintf255(request, "\"build\":%d,", BUILD_NUMBER);
 	hprintf255(request, "\"hardware\":\"%s\"}", HARDWARE);
-	
 	poststr(request, NULL);
+
 	return 0;
 }
 
