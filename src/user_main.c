@@ -1583,9 +1583,8 @@ void Main_Init_Before_Delay()
 		bSafeMode = 1;
 		ADDLOGF_INFO("###### safe mode activated - boot failures %d", g_bootFailures);
 	}
-	setupCurtainPins();
 	CFG_InitAndLoad();
-
+	setupCurtainPins();
 #if ENABLE_LITTLEFS
 	LFSAddCmds();
 #endif
