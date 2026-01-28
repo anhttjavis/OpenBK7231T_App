@@ -1091,8 +1091,8 @@ static int http_rest_get_info(http_request_t* request) {
     hprintf255(request, "\"netid\":\"%llu\",", (unsigned long long)num);
     
     // Sử dụng kiểm tra NULL cho các Macro để tránh Data Abort (r0=0)
-    hprintf255(request, "\"model\":\"%s\",",MODEL);
-    hprintf255(request, "\"chipset\":\"%s\",", PLATFORM_MCU_NAME);
+    hprintf255(request, "\"model\":\"%s\",", (MODEL && strlen(MODEL)>0) ? MODEL : "Generic");
+    hprintf255(request, "\"chipset\":\"%s\",", (PLATFORM_MCU_NAME) ? PLATFORM_MCU_NAME : "BK7238");
     
     // Version cố định để debug
     poststr(request, "\"version\":\"1.0.0\",");
@@ -1102,7 +1102,7 @@ static int http_rest_get_info(http_request_t* request) {
     hprintf255(request, "\"code\":\"%u\",", c);
     
     hprintf255(request, "\"build\":%d,", (int)BUILD_NUMBER);
-    hprintf255(request, "\"hardware\":\"%s\"", HARDWARE);
+    hprintf255(request, "\"hardware\":\"%s\"", (HARDWARE) ? HARDWARE : "v1");
     poststr(request, "}");
 
     poststr(request, NULL);
