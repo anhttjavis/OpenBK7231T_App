@@ -1070,43 +1070,27 @@ static int http_rest_post_logconfig(http_request_t* request) {
 
 
 static int http_rest_get_info(http_request_t* request) {
-    char macstr[20] = {0};
-    unsigned char mac[6] = {0};
+	char macstr[3 * 6 + 1];
+	unsigned char mac[6];
+	getMAC(mac);
     uint64_t num = 0;
-    
-    // Lấy MAC an toàn
-    getMAC(mac);
-    HAL_GetMACStrn(macstr);
-
     for (int index = 0; index < 6; index++) {
-        num = (num << 8) | (uint64_t)mac[index];
+        num = (num << 8) | (byte)mac[index];
     }
-
-    // Khởi tạo HTTP JSON
-    http_setup(request, httpMimeTypeJson);
-
-    // GỬI TỪNG ĐOẠN NHỎ - Cách này an toàn tuyệt đối cho Buffer 255 byte
-    poststr(request, "{");
-    hprintf255(request, "\"device_id\":\"%s\",", macstr);
-    hprintf255(request, "\"netid\":\"%llu\",", (unsigned long long)num);
-    
-    // Sử dụng kiểm tra NULL cho các Macro để tránh Data Abort (r0=0)
-    hprintf255(request, "\"model\":\"%s\",", (MODEL && strlen(MODEL)>0) ? MODEL : "Generic");
-    hprintf255(request, "\"chipset\":\"%s\",", (PLATFORM_MCU_NAME) ? PLATFORM_MCU_NAME : "BK7238");
-    
-    // Version cố định để debug
-    poststr(request, "\"version\":\"1.0.0\",");
-    
-    // Tính toán code hash
-    uint32_t c = hash((const uint8_t*)macstr, strlen(macstr));
-    hprintf255(request, "\"code\":\"%u\",", c);
-    
-    hprintf255(request, "\"build\":%d,", (int)BUILD_NUMBER);
-    hprintf255(request, "\"hardware\":\"%s\"", (HARDWARE) ? HARDWARE : "v1");
-    poststr(request, "}");
-
-    poststr(request, NULL);
-    return 0;
+	http_setup(request, httpMimeTypeJson);
+	// hprintf255(request, "{\"device_id\":\"%s\",", HAL_GetMACStrn(macstr));
+	hprintf255(request, "\"type\":\"Generic Wi-Fi Device\",");
+	hprintf255(request, "\"netid\":\"%"PRIu64"\",", num);
+	hprintf255(request, "\"model\":\"%s\",",MODEL);
+	hprintf255(request, "\"chipset\":\"%s\",", PLATFORM_MCU_NAME);
+	hprintf255(request, "\"version\":\"%s\",", USER_SW_VER);
+	// hprintf255(request, "\"version\":\"%s\",", "1.0.0");
+	// hprintf255(request, "\"code\":\"%"PRIu32"\",", hash((const uint8_t*)(macstr),strlen(macstr)));
+	hprintf255(request, "\"build\":%d,", BUILD_NUMBER);
+	hprintf255(request, "\"hardware\":\"%s\"}", HARDWARE);
+	
+	poststr(request, NULL);
+	return 0;
 }
 
 static int http_rest_post_pins(http_request_t* request) {
