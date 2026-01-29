@@ -17,7 +17,7 @@
 #include "hal/hal_flashVars.h"
 #include "hal/hal_pins.h"
 #include "hal/hal_adc.h"
-
+#include "driver/drv_ntp.h"
 #ifdef PLATFORM_BEKEN
 #include <gpio_pub.h>
 #include "driver/drv_ir.h"
@@ -1330,10 +1330,55 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 		}
 	}
 #if ENABLE_MQTT
-	if ((iFlags & CHANNEL_SET_FLAG_SKIP_MQTT) == 0) {
-		if (CHANNEL_ShouldBePublished(ch)) {
-			MQTT_ChannelPublish(ch, 0);
+	// if ((iFlags & CHANNEL_SET_FLAG_SKIP_MQTT) == 0) {
+	// 	if (CHANNEL_ShouldBePublished(ch)) {
+	// 		MQTT_ChannelPublish(ch, 0);
+	// 	}
+	// }
+	unsigned int time_ntp = g_ntpTime + 7 * 60 * 60;
+	switch (ch)
+	{
+	case OPEN:
+		if (iVal == 1) {
+			curtain_position = 100;
+			garage_state = 1;
+			MQTT_ReturnState();
+			HTTPClient_Post_Notification("open");
+			Check_TimeCall(time_ntp);
+			CFG_SetSaveState(time_ntp, 1);
 		}
+		break;
+	case CLOSE:
+		if (iVal == 1) {
+			curtain_position = 0;
+			garage_state = 0;
+			MQTT_ReturnState();
+			HTTPClient_Post_Notification("close");
+			CFG_SetSaveState(time_ntp, 3);
+		}
+		break;
+	case STOP:
+		if (iVal == 1) {
+			curtain_position = 50;
+			garage_state = 1;
+			MQTT_ReturnState();
+			HTTPClient_Post_Notification("stop");
+			CFG_SetSaveState(time_ntp, 2);
+		}
+		break;
+	case LOCK:
+		if (iVal == 1) {
+			curtain_lock = true;
+			MQTT_ReturnState();
+			HTTPClient_Post_Notification("lock");
+		} else if (iVal == 0) {
+			curtain_lock = false;
+			MQTT_ReturnState();
+			HTTPClient_Post_Notification("unlock");
+		}
+		break;
+	default:
+		break;
 	}
 #endif
 	// Simple event - it just says that there was a change

@@ -734,29 +734,26 @@ int channelSet(obk_mqtt_request_t* request) {
 					// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Control: %s ", tokenStrValue);
 					if (strcmp(tokenStrValue,"open") == 0) {
 						if(curtain_lock == false){
-							// TuyaMCU_SendControl(OPEN);
+							CHANNEL_Set(g_cfg.pins.channels[OPEN],1,0);
 						}
 					}
 					else if (strcmp(tokenStrValue,"close") == 0) {
 						if(curtain_lock == false){
-							// TuyaMCU_SendControl(CLOSE);
+							CHANNEL_Set(g_cfg.pins.channels[CLOSE],1,0);
 						}
-						//TuyaMCU_SendControl(CLOSE); //02
 					}
 					else if (strcmp(tokenStrValue,"stop") == 0){
 						if(curtain_lock == false){
-							// TuyaMCU_SendControl(STOP);
+							CHANNEL_Set(g_cfg.pins.channels[STOP],1,0);
 						}
-						//TuyaMCU_SendControl(STOP); //04
 					}
 					else if (strcmp(tokenStrValue,"lock") == 0){
-						// MQTT_ReturnState();
 						if(curtain_lock == false){
-							// TuyaMCU_SendControlState(LOCK, LOCK_STATE);
+							CHANNEL_Set(g_cfg.pins.channels[LOCK],LOCK_STATE,0);
 						}
 						else
 						{
-							// TuyaMCU_SendControlState(LOCK, UNLOCK_STATE);
+							CHANNEL_Set(g_cfg.pins.channels[LOCK],UNLOCK_STATE,0);
 						}
 					}
 					else if (strcmp(tokenStrValue,"rf_add") == 0){
@@ -1570,13 +1567,7 @@ OBK_Publish_Result MQTT_PublishTele(const char* teleName, const char* teleValue)
 	return MQTT_PublishTopicToClient(mqtt_client, topic, teleName, teleValue, 0, false);
 }
 OBK_Publish_Result MQTT_ReturnState(){
-	//char dataStr[256];
 	cJSON *json = cJSON_CreateObject();
-	//sprintf(dataStr, "[{\"id\":\"garage.1\",\"state\":\"%s\",\"position\":%i,\"set_time\":%i, \"noti\":%i}]", (garage_state == 1 ? "open": "close"),curtain_position, set_time, (noti ? 1 : 0));
-	//sprintf(dataStr, "[{\"id\":\"garage.1\",\"state\":\"%s\",\"position\":%i,\"door_sensor\":%i,\"lock\":%i,\"sensor\":%i, \"noti\":%i}]", (garage_state == 1 ? "open": "close"), curtain_position, (door_sensor ? 0 : 1), (curtain_lock ? 1:0), (sensor_lock ? 1 : 0) , (noti ? 1 : 0));
-#if defined(JWGU_BEKEN_CBU_MCU_IPX)
-	//sprintf(dataStr, "[{\"id\":\"garage.1\",\"state\":\"%s\",\"position\":%i,\"door_sensor\":%i,\"lock\":%i,\"sensor\":%i,\"noti\":%i,\"call\":%i,\"check_open\":%i,\"time_start\":%i,\"time_end\":%i,\"time_check_start\":%i,\"time_check_end\":%i}]", (garage_state == 1 ? "open": "close"), curtain_position, (door_sensor ? 0 : 1), (curtain_lock ? 1:0), (sensor_lock ? 1 : 0) , (noti ? 1 : 0), (call ? 1 : 0), (check_call_open ? 1 : 0), CFG_GetTimeStart(), CFG_GetTimeEnd(), CFG_GetTimeCheckStart(), CFG_GetTimeCheckEnd());
-	// Add data to the JSON object
 	if(CFG_GetEnableSensor() == 1){
 		if(door_sensor == 0){
 			garage_state = 1;
@@ -1601,14 +1592,6 @@ OBK_Publish_Result MQTT_ReturnState(){
     cJSON_AddNumberToObject(json, "time_end", CFG_GetTimeEnd());
     cJSON_AddNumberToObject(json, "time_check_start", CFG_GetTimeCheckStart());
     cJSON_AddNumberToObject(json, "time_check_end", CFG_GetTimeCheckEnd());
-#elif defined(JWGU_BEKEN_CBU_MCU)
-	cJSON_AddStringToObject(json, "id", "garage.1");
-	cJSON_AddStringToObject(json, "state", garage_state == 1 ? "open" : "closed");
-	// cJSON_AddNumberToObject(json, "position", curtain_position);
-	cJSON_AddNumberToObject(json, "lock", curtain_lock ? 1 : 0);
-	cJSON_AddNumberToObject(json, "set_time", set_time);
-	cJSON_AddNumberToObject(json, "noti", noti ? 1 : 0);
-#endif
 	cJSON *json_array = cJSON_CreateArray();
 
     // Add the JSON object to the JSON array
