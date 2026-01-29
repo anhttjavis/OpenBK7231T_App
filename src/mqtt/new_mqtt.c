@@ -757,18 +757,18 @@ int channelSet(obk_mqtt_request_t* request) {
 						}
 					}
 					else if (strcmp(tokenStrValue,"rf_add") == 0){
-						// TuyaMCU_SendControl(0x10);
+						CHANNEL_Set(RF_ADD,1,0);
 					}
 					else if (strcmp(tokenStrValue,"rf_del") == 0){
-						// TuyaMCU_SendControl(0x68);
+						CHANNEL_Set(RF_DEL,1,0);
 					}
 					else if (strcmp(tokenStrValue,"reverse") == 0){
 						if(reverse == false){
-							// TuyaMCU_SendControlState(0x6E, 0x01);
+							CHANNEL_Set(REVERSE,1,0);
 						}
 						else
 						{
-							// TuyaMCU_SendControlState(0x6E, 0x00);
+							CHANNEL_Set(REVERSE,0,0);
 						}
 					}
 				}

@@ -1181,12 +1181,19 @@ typedef enum channelType_e {
 // #endif
 #define MODEL "JWGU2"
 #define HARDWARE "JWGU_BEKEN_CBU_MCU_IPX"
-#define OPEN 0x01
-#define STOP 0x02
-#define CLOSE 0x03
-#define LOCK 0x04
+#define OPEN 0x01  //dp 1
+#define STOP 0x02  //dp 2
+#define CLOSE 0x03 	//dp 3	
+#define LOCK 0x04   //dp 4
 #define LOCK_STATE 0x01
 #define UNLOCK_STATE 0x00
+#define REVERSE 5  //dp 110
+#define RF_ADD 6   //dp 16
+#define RF_DEL 7  //dp 140
+#define DOOR_SENS 8  //dp 101
+#define SAFETY_SENS 9   //dp 109
+#define JOURNEY_TIME 10  //dp 111
+#define CLOSE_PERCENT 11  //dp 114
 
 #define CHANNEL_MAX 64
 

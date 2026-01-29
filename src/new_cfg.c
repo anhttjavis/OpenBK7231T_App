@@ -1032,14 +1032,29 @@ void setupCurtainPins() {
 	DRV_StartDriver("TuyaMCU");
 	UART_InitUART(9600, 0);
 	// CMD_ExecuteCommand("tuyaMcu_defWiFiState 4", 0);
-	CHANNEL_SetType(1, 6);
-	CHANNEL_SetType(2, 6);
-	CHANNEL_SetType(3, 6);
-	CHANNEL_SetType(4, 6);
+	CHANNEL_SetType(OPEN, ChType_Toggle);
+	CHANNEL_SetType(STOP, ChType_Toggle);
+	CHANNEL_SetType(CLOSE, ChType_Toggle);
+	CHANNEL_SetType(LOCK, ChType_Toggle);
+	CHANNEL_SetType(REVERSE, ChType_Toggle);
+	CHANNEL_SetType(RF_ADD, ChType_Toggle);
+	CHANNEL_SetType(RF_DEL, ChType_Toggle);
+	CHANNEL_SetType(DOOR_SENS, ChType_OpenClosed);
+	CHANNEL_SetType(SAFETY_SENS, ChType_OpenClosed);
+	CHANNEL_SetType(JOURNEY_TIME, ChType_TextField);
+	CHANNEL_SetType(CLOSE_PERCENT, ChType_Percent);
+	// linkTuyaMCUOutputToChannel [dpId] [varType] [channelID]
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 1 bool 1", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 2 bool 2", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 3 bool 3", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 4 bool 4", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 110 bool 5", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 16 bool 6", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 140 bool 7", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 101 bool 8", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 109 bool 9", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 111 val 10", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 114 val 11", 0);
 	// CFG_ClearPins();
 	CFG_Save_SetupTimer();
 	

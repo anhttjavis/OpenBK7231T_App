@@ -1377,6 +1377,41 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 			HTTPClient_Post_Notification("unlock");
 		}
 		break;
+	case REVERSE:
+		if (iVal == 1) {
+			reverse = true;
+            MQTT_ReturnState();
+		} else if (iVal == 0) {
+			reverse = false;
+			MQTT_ReturnState();
+		}
+		break;
+	case DOOR_SENS:
+		if(door_sensor != iVal){
+			door_sensor = iVal;
+			MQTT_ReturnState();
+			// MQTT_ReturnState_local();
+			if(door_sensor == true && curtain_lock == true && garage_state == 0){
+				check_call = 1;
+				HTTPClient_Post_Notification("pry");   
+			}
+		}
+		break;
+	case SAFETY_SENS:
+		if(iVal != sensor_lock){ 
+			if(iVal == 1){
+				sensor_lock = iVal;
+				MQTT_ReturnState();
+				// MQTT_ReturnState_local();
+				check_call = 6;
+				HTTPClient_Post_Notification("stuck");
+			} 
+			else if(iVal == 0){
+				sensor_lock = iVal;
+				MQTT_ReturnState();
+				// MQTT_ReturnState_local();
+			}
+		}
 	default:
 		break;
 	}
