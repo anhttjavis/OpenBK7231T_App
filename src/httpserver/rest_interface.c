@@ -1078,7 +1078,7 @@ static int http_rest_get_info(http_request_t* request) {
         num = (num << 8) | (byte)mac[index];
     }
 	http_setup(request, httpMimeTypeJson);
-	// hprintf255(request, "{\"device_id\":\"%s\",", HAL_GetMACStrn(macstr));
+	hprintf255(request, "{\"device_id\":\"%s\",", HAL_GetMACStrn(macstr));
 	hprintf255(request, "\"type\":\"Generic Wi-Fi Device\",");
 	hprintf255(request, "\"netid\":\"%"PRIu64"\",", num);
 	hprintf255(request, "\"model\":\"%s\",",MODEL);
