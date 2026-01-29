@@ -734,26 +734,26 @@ int channelSet(obk_mqtt_request_t* request) {
 					// addLogAdv(LOG_INFO, LOG_FEATURE_MQTT, "Control: %s ", tokenStrValue);
 					if (strcmp(tokenStrValue,"open") == 0) {
 						if(curtain_lock == false){
-							CHANNEL_Set(g_cfg.pins.channels[OPEN],1,0);
+							CHANNEL_Set(OPEN,1,0);
 						}
 					}
 					else if (strcmp(tokenStrValue,"close") == 0) {
 						if(curtain_lock == false){
-							CHANNEL_Set(g_cfg.pins.channels[CLOSE],1,0);
+							CHANNEL_Set(CLOSE,1,0);
 						}
 					}
 					else if (strcmp(tokenStrValue,"stop") == 0){
 						if(curtain_lock == false){
-							CHANNEL_Set(g_cfg.pins.channels[STOP],1,0);
+							CHANNEL_Set(STOP,1,0);
 						}
 					}
 					else if (strcmp(tokenStrValue,"lock") == 0){
 						if(curtain_lock == false){
-							CHANNEL_Set(g_cfg.pins.channels[LOCK],LOCK_STATE,0);
+							CHANNEL_Set(LOCK,LOCK_STATE,0);
 						}
 						else
 						{
-							CHANNEL_Set(g_cfg.pins.channels[LOCK],UNLOCK_STATE,0);
+							CHANNEL_Set(LOCK,UNLOCK_STATE,0);
 						}
 					}
 					else if (strcmp(tokenStrValue,"rf_add") == 0){
