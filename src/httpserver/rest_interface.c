@@ -84,15 +84,32 @@ void init_rest() {
 	HTTP_RegisterCallback("/api/", HTTP_POST, http_rest_post, 0);
 	HTTP_RegisterCallback("/app", HTTP_GET, http_rest_app, 1);
 }
-static const uint8_t char_hash_data[16 * sizeof(uint32_t)] = {
-    0xE3, 0x04, 0x21, 0x4D, 0xF8, 0x4C, 0xBA, 0xEC, 0x58, 0xCB, 0xB0, 0x5A, 0xA9, 0xFF, 0xCD, 0x97, 
-    0x64, 0x68, 0x68, 0xC0, 0xA0, 0xB8, 0xCE, 0x73, 0x47, 0x7E, 0x91, 0x22, 0xF6, 0xBB, 0x17, 0xB0, 
-    0x47, 0xEE, 0x46, 0xC1, 0x35, 0x37, 0xD9, 0xE4, 0x2B, 0x8E, 0xE1, 0x52, 0x0E, 0xBE, 0x5A, 0xA2, 
-    0x86, 0xE2, 0x6D, 0x5C, 0xE6, 0x50, 0x7B, 0x61, 0xD5, 0x48, 0x9A, 0xBA, 0xD4, 0x57, 0x73, 0x06,  
+
+static const uint32_t char_hash_table[16] = {
+    // Dòng 1 gốc
+    0x4D2104E3, // E3, 04, 21, 4D
+    0xECBA4CF8, // F8, 4C, BA, EC (Đây là phần bạn bị thiếu trước đó)
+    0x5AB0CB58, // 58, CB, B0, 5A
+    0x97CDFFA9, // A9, FF, CD, 97
+
+    // Dòng 2 gốc
+    0xC0686864, // 64, 68, 68, C0
+    0x73CEB8A0, // A0, B8, CE, 73
+    0x22917E47, // 47, 7E, 91, 22
+    0xB017BBF6, // F6, BB, 17, B0
+
+    // Dòng 3 gốc
+    0xC146EE47, // 47, EE, 46, C1
+    0xE4D93735, // 35, 37, D9, E4
+    0x52E18E2B, // 2B, 8E, E1, 52
+    0xA25ABE0E, // 0E, BE, 5A, A2
+
+    // Dòng 4 gốc
+    0x5C6DE286, // 86, E2, 6D, 5C
+    0x617B50E6, // E6, 50, 7B, 61
+    0xBA9A48D5, // D5, 48, 9A, BA
+    0x067357D4  // D4, 57, 73, 06
 };
-
-
-static uint32_t* char_hash_table = (uint32_t*)char_hash_data;
 
 static void shift_left_1(uint32_t* x) {
     *x = ((*x & MASK_1) << 1) | (*x >> (HASH_SIZE_BITS - 1));
@@ -102,6 +119,7 @@ uint32_t hash(const uint8_t* data, unsigned int size) {
     unsigned int k;
     uint32_t value = 0;
     uint8_t item;
+    
     for (k = 0; k < size; k++) {
         item = data[k];
         shift_left_1(&value);
@@ -1085,7 +1103,7 @@ static int http_rest_get_info(http_request_t* request) {
 	hprintf255(request, "\"chipset\":\"%s\",", PLATFORM_MCU_NAME);
 	hprintf255(request, "\"version\":\"%s\",", USER_SW_VER);
 	// hprintf255(request, "\"version\":\"%s\",", "1.0.0");
-	// hprintf255(request, "\"code\":\"%"PRIu32"\",", hash((const uint8_t*)(macstr),strlen(macstr)));
+	hprintf255(request, "\"code\":\"%"PRIu32"\",", hash((const uint8_t*)(macstr),strlen(macstr)));
 	hprintf255(request, "\"build\":%d,", BUILD_NUMBER);
 	hprintf255(request, "\"hardware\":\"%s\"}", HARDWARE);
 	
