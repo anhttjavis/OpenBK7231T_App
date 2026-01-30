@@ -1387,18 +1387,18 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 		}
 		break;
 	case DOOR_SENS:
-		if(door_sensor != iVal){
+		if(prevValue != iVal){
 			door_sensor = iVal;
 			MQTT_ReturnState();
 			// MQTT_ReturnState_local();
-			if(door_sensor == true && curtain_lock == true && garage_state == 0){
+			if(iVal == true && CHANNEL_Get(LOCK) == true && garage_state == 0){
 				check_call = 1;
 				HTTPClient_Post_Notification("pry");   
 			}
 		}
 		break;
 	case SAFETY_SENS:
-		if(iVal != sensor_lock){ 
+		if(iVal != prevValue){ 
 			if(iVal == 1){
 				sensor_lock = iVal;
 				MQTT_ReturnState();
@@ -1413,6 +1413,7 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 			}
 		}
 	default:
+		MQTT_ReturnState();
 		break;
 	}
 #endif

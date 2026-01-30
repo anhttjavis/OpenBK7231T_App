@@ -117,6 +117,7 @@ static short g_teleSensor_interval = 3;
 #define GET_SCHEDULE 15
 #define DOOR_SENSOR_ENABLE 16
 #define SET_TIME_RELEASE 18
+#define SET_JOURNEY 17
 #define GET_STATE 	1
 #define GET_SYS		2
 
@@ -763,12 +764,21 @@ int channelSet(obk_mqtt_request_t* request) {
 						CHANNEL_Set(RF_DEL,1,0);
 					}
 					else if (strcmp(tokenStrValue,"reverse") == 0){
-						if(reverse == false){
+						if(CHANNEL_Get(REVERSE) == 0){
 							CHANNEL_Set(REVERSE,1,0);
 						}
 						else
 						{
 							CHANNEL_Set(REVERSE,0,0);
+						}
+					}
+					else if (strcmp(tokenStrValue,"set_position") == 0){
+						i += t[i + 1].size + 1;
+						if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) && strcmp(tokenStrValue, "value") == 0) {
+							int value = atoi(json_str + t[i + 2].start);
+							if(value > 0 && value < 100){
+							CHANNEL_Set(CLOSE_PERCENT,value,0);	
+							}
 						}
 					}
 				}
@@ -1000,6 +1010,16 @@ int channelSet(obk_mqtt_request_t* request) {
 			}
 			i += t[i + 1].size + 1;
 		}
+		else if (state_control == SET_JOURNEY) {
+			if (strcmp(tokenStrValue,"value") == 0){
+				int journey_time;	
+				journey_time = atoi(json_str + t[i + 1].start);
+				if(journey_time > 0 && journey_time <= 900) {
+					CHANNEL_Set(JOURNEY_TIME,journey_time,0);	
+				}
+			}
+			i += t[i + 1].size + 1;
+		}
 		else if (state_control == SET_WEBPASS) {
 			if (strcmp(tokenStrValue,"password") == 0){
 				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
@@ -1098,6 +1118,10 @@ int channelSet(obk_mqtt_request_t* request) {
 					// MQTT_ReturnState_local();
 					state_control = GET_SCHEDULE;
 					MQTT_ReturnSchedule();
+				}
+				else if (!strcmp(tokenStrValue, "set_journey")){
+					// MQTT_ReturnState_local();
+					state_control = SET_JOURNEY;
 				}
 				else if (!strcmp(tokenStrValue, "get_history")){
 					int index = g_cfg.savestate.index;
@@ -1580,11 +1604,13 @@ OBK_Publish_Result MQTT_ReturnState(){
 	}
     cJSON_AddStringToObject(json, "id", "garage.1");
     cJSON_AddStringToObject(json, "state", garage_state == 1 ? "open" : "closed");
-    // cJSON_AddNumberToObject(json, "position", curtain_position);
+    cJSON_AddNumberToObject(json, "position", CHANNEL_Get(CLOSE_PERCENT));
 	cJSON_AddNumberToObject(json, "sensor_enable", CFG_GetEnableSensor());
-    cJSON_AddNumberToObject(json, "door_sensor", (door_sensor ? 0 : 1));
-    cJSON_AddNumberToObject(json, "lock", curtain_lock ? 1 : 0);
-    cJSON_AddNumberToObject(json, "sensor", (sensor_lock ? 1 : 0));
+    cJSON_AddNumberToObject(json, "door_sensor", (CHANNEL_Get(DOOR_SENS) ? 0 : 1));
+    cJSON_AddNumberToObject(json, "lock", CHANNEL_Get(LOCK));
+    cJSON_AddNumberToObject(json, "sensor", CHANNEL_Get(SAFETY_SENS));
+	cJSON_AddNumberToObject(json, "journey_time", CHANNEL_Get(JOURNEY_TIME));
+	cJSON_AddNumberToObject(json, "reverse", CHANNEL_Get(REVERSE));
     cJSON_AddNumberToObject(json, "noti", noti ? 1 : 0);
     cJSON_AddNumberToObject(json, "call", call ? 1 : 0);
     cJSON_AddNumberToObject(json, "check_open", check_call_open ? 1 : 0);

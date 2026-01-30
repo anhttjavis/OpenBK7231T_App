@@ -421,12 +421,12 @@ void processSchedule(int index, time_t now) {
             if (((CFG_GetSchedule(index, "recurrent") >> ltm->tm_wday) & 1) == 1) {
                 int state = CFG_GetSchedule(index, "state");
 				if(state == 0) {
-					// TuyaMCU_SendControlState(LOCK, UNLOCK_STATE);
-					// TuyaMCU_SendControl(CLOSE);
+					CHANNEL_Set(LOCK,UNLOCK_STATE,0);
+					CHANNEL_Set(CLOSE,1,0);
 				}
 				else if(state == 1) {
-					// TuyaMCU_SendControlState(LOCK, UNLOCK_STATE);
-					// TuyaMCU_SendControl(OPEN);
+					CHANNEL_Set(LOCK,UNLOCK_STATE,0);
+					CHANNEL_Set(OPEN,1,0);
 				}
             }
             CFG_SetSchedule(index, "passed", 1);
