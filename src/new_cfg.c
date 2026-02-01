@@ -1047,21 +1047,49 @@ void setupCurtainPins() {
 	CHANNEL_SetType(UI_MODE, ChType_TextField);
 	CHANNEL_SetType(EMERGENCY_OPEN, ChType_Toggle);
 	CHANNEL_SetType(FIRE_ALARM, ChType_ReadOnlyEnum);
-	// linkTuyaMCUOutputToChannel [dpId] [varType] [channelID]
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 1 bool 1", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 2 bool 2", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 3 bool 3", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 4 bool 4", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 110 bool 5", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 16 bool 6", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 104 bool 7", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 101 bool 8", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 109 bool 9", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 111 val 10", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 114 val 11", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 103 val 12", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 112 val 13", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 117 enum 14", 0);
+	// // // linkTuyaMCUOutputToChannel [dpId] [varType] [channelID]
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 1 bool 1", 0);
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 2 bool 2", 0);
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 3 bool 3", 0);
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 4 bool 4", 0);
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 110 bool 5", 0);
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 16 bool 6", 0);
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 104 bool 7", 0);
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 101 bool 8", 0);
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 109 bool 9", 0);
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 111 val 10", 0);
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 114 val 11", 0);
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 103 val 12", 0);
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 112 val 13", 0);
+	// // CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 117 enum 14", 0);
+	// // linkTuyaMCUOutputToChannel [dpId] [varType] [channelID]
+    // // dpType: 1=bool, 2=val, 4=enum
+    
+    // TuyaMCU_MapIDToChannel(1, 1, OPEN, 0, 1.0f, 0, 0, 0, 0);   // OPEN (bool)
+    // TuyaMCU_MapIDToChannel(2, 1, STOP, 0, 1.0f, 0, 0, 0, 0);   // STOP (bool)
+    // TuyaMCU_MapIDToChannel(3, 1, CLOSE, 0, 1.0f, 0, 0, 0, 0);   // CLOSE (bool)
+    // TuyaMCU_MapIDToChannel(4, 1, LOCK, 0, 1.0f, 0, 0, 0, 0);   // LOCK (bool)
+    // TuyaMCU_MapIDToChannel(110, 1, REVERSE, 0, 1.0f, 0, 0, 0, 0); // REVERSE (bool)
+    // TuyaMCU_MapIDToChannel(16, 1, RF_ADD, 0, 1.0f, 0, 0, 0, 0);  // RF_ADD (bool)
+    // TuyaMCU_MapIDToChannel(104, 1, RF_DEL, 0, 1.0f, 0, 0, 0, 0); // RF_DEL (bool)
+    // TuyaMCU_MapIDToChannel(101, 1, DOOR_SENS, 0, 1.0f, 0, 0, 0, 0); // DOOR_SENS (bool)
+    // TuyaMCU_MapIDToChannel(109, 1, SAFETY_SENS, 0, 1.0f, 0, 0, 0, 0); // SAFETY_SENS (bool)
+    // TuyaMCU_MapIDToChannel(111, 2, JOURNEY_TIME, 0, 1.0f, 0, 0, 0, 0); // JOURNEY_TIME (val)
+    // TuyaMCU_MapIDToChannel(114, 2, CLOSE_PERCENT, 0, 1.0f, 0, 0, 0, 0); // CLOSE_PERCENT (val)
+    // TuyaMCU_MapIDToChannel(103, 2, UI_MODE, 0, 1.0f, 0, 0, 0, 0); // UI_MODE (val)
+    // TuyaMCU_MapIDToChannel(112, 2, EMERGENCY_OPEN, 0, 1.0f, 0, 0, 0, 0); // EMERGENCY_OPEN (val)
+	// TuyaMCU_MapIDToChannel(117, 4, FIRE_ALARM, 0, 1.0f, 0, 0, 0, 0); // FIRE_ALARM (enum)
+
+	for (int i = 0; i < MAP_COUNT; i++) {
+        // Gọi hàm nội bộ để map trực tiếp
+        TuyaMCU_MapIDToChannel(
+            curtainMappings[i].dpId,    // dpId
+            curtainMappings[i].type,    // dpType (1:bool, 2:val, 4:enum)
+            curtainMappings[i].channel, // channel
+            0, 1.0f, 0, 0, 0, 0         // Các tham số mặc định (obkFlags, mult, inv, delta...)
+        );
+    }
+
 	CHANNEL_SetLabel(OPEN, "OPEN", 1);
     CHANNEL_SetLabel(STOP, "STOP", 1);
     CHANNEL_SetLabel(CLOSE, "CLOSE", 1);
@@ -1071,7 +1099,6 @@ void setupCurtainPins() {
     CHANNEL_SetLabel(RF_DEL, "RF_DEL", 1);
     CHANNEL_SetLabel(DOOR_SENS, "DOOR_SENS", 1);
     CHANNEL_SetLabel(SAFETY_SENS, "SAFETY_SENS", 1);
-    
     CHANNEL_SetLabel(JOURNEY_TIME, "JOURNEY_TIME", 1);
     CHANNEL_SetLabel(CLOSE_PERCENT, "CLOSE_PERCENT", 1);
     CHANNEL_SetLabel(UI_MODE, "UI_MODE", 1);

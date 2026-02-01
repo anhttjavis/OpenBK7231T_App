@@ -1198,6 +1198,35 @@ typedef enum channelType_e {
 #define EMERGENCY_OPEN 13  //dp 112
 #define FIRE_ALARM 14  //dp 117
 
+typedef struct {
+    int channel; // Số Channel trong OBK
+    int dpId;    // ID tương ứng của Tuya MCU
+    int type;    // 1: bool, 2: val, 4: enum
+} tuya_dp_map_t;
+
+// Bảng ánh xạ: {Channel, DP ID, Type}
+static const tuya_dp_map_t curtainMappings[] = {
+    {OPEN,           1,   1}, // dp 1
+    {STOP,           2,   1}, // dp 2
+    {CLOSE,          3,   1}, // dp 3
+    {LOCK,           4,   1}, // dp 4
+    {REVERSE,        110, 1}, // dp 110
+    {RF_ADD,         16,  1}, // dp 16
+    {RF_DEL,         104, 1}, // dp 104
+    {DOOR_SENS,      101, 1}, // dp 101
+    {SAFETY_SENS,    109, 1}, // dp 109
+    {JOURNEY_TIME,   111, 2}, // dp 111
+    {CLOSE_PERCENT,  114, 2}, // dp 114
+    {UI_MODE,        103, 2}, // dp 103
+    {EMERGENCY_OPEN, 112, 2}, // dp 112
+    {FIRE_ALARM,     117, 4}  // dp 117
+};
+
+#define MAP_COUNT (sizeof(curtainMappings) / sizeof(curtainMappings[0]))
+
+
+
+
 #define CHANNEL_MAX 64
 
 // Special channel indexes
