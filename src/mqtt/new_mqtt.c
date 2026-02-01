@@ -118,6 +118,7 @@ static short g_teleSensor_interval = 3;
 #define DOOR_SENSOR_ENABLE 16
 #define SET_TIME_RELEASE 18
 #define SET_JOURNEY 17
+#define SET_EMERGENCY_OPEN 19
 #define GET_STATE 	1
 #define GET_SYS		2
 
@@ -776,8 +777,8 @@ int channelSet(obk_mqtt_request_t* request) {
 						i += t[i + 1].size + 1;
 						if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) && strcmp(tokenStrValue, "value") == 0) {
 							int value = atoi(json_str + t[i + 2].start);
-							if(value > 0 && value < 100){
-							CHANNEL_Set(CLOSE_PERCENT,value,0);	
+							if(value >= 0 && value <= 100){
+							CHANNEL_Set(CLOSE_PERCENT,100 - value ,0);	
 							}
 						}
 					}
@@ -1011,12 +1012,20 @@ int channelSet(obk_mqtt_request_t* request) {
 			i += t[i + 1].size + 1;
 		}
 		else if (state_control == SET_JOURNEY) {
-			if (strcmp(tokenStrValue,"value") == 0){
+			if (strcmp(tokenStrValue,"time") == 0){
 				int journey_time;	
 				journey_time = atoi(json_str + t[i + 1].start);
 				if(journey_time > 0 && journey_time <= 900) {
 					CHANNEL_Set(JOURNEY_TIME,journey_time,0);	
 				}
+			}
+			i += t[i + 1].size + 1;
+		}
+		else if (state_control == SET_EMERGENCY_OPEN) {
+			if (strcmp(tokenStrValue,"state") == 0){
+				int set_emergency;
+				set_emergency = atoi(json_str + t[i + 1].start);
+				CHANNEL_Set(EMERGENCY_OPEN,set_emergency,0);
 			}
 			i += t[i + 1].size + 1;
 		}
@@ -1120,8 +1129,10 @@ int channelSet(obk_mqtt_request_t* request) {
 					MQTT_ReturnSchedule();
 				}
 				else if (!strcmp(tokenStrValue, "set_journey")){
-					// MQTT_ReturnState_local();
 					state_control = SET_JOURNEY;
+				}
+				else if (!strcmp(tokenStrValue, "set_emergency_open")){
+					state_control = SET_EMERGENCY_OPEN;
 				}
 				else if (!strcmp(tokenStrValue, "get_history")){
 					int index = g_cfg.savestate.index;
