@@ -1399,14 +1399,14 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 		break;
 	case SAFETY_SENS:
 		if(iVal != prevValue){ 
-			if(iVal == 1){
+			if(iVal == 0){
 				sensor_lock = iVal;
 				MQTT_ReturnState();
 				// MQTT_ReturnState_local();
 				check_call = 6;
 				HTTPClient_Post_Notification("stuck");
 			} 
-			else if(iVal == 0){
+			else if(iVal == 1){
 				sensor_lock = iVal;
 				MQTT_ReturnState();
 				// MQTT_ReturnState_local();

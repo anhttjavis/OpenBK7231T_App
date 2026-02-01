@@ -1039,8 +1039,8 @@ void setupCurtainPins() {
 	CHANNEL_SetType(REVERSE, ChType_Toggle);
 	CHANNEL_SetType(RF_ADD, ChType_Toggle);
 	CHANNEL_SetType(RF_DEL, ChType_Toggle);
-	CHANNEL_SetType(DOOR_SENS, ChType_OpenClosed);
-	CHANNEL_SetType(SAFETY_SENS, ChType_OpenClosed);
+	CHANNEL_SetType(DOOR_SENS, ChType_OpenClosed_Inv);
+	CHANNEL_SetType(SAFETY_SENS, ChType_OpenClosed_Inv);
 	CHANNEL_SetType(JOURNEY_TIME, ChType_TextField);
 	CHANNEL_SetType(CLOSE_PERCENT, ChType_Percent);
 	// linkTuyaMCUOutputToChannel [dpId] [varType] [channelID]
