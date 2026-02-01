@@ -1063,22 +1063,23 @@ void setupCurtainPins() {
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 117 enum 14", 0);
 
 	CMD_ExecuteCommand("SetChannelEnum 14 1:Alarm 0:Normal", 0);
-	CMD_ExecuteCommand("SetChannelLabel 1 \"OPEN\"", 0);
-	CMD_ExecuteCommand("SetChannelLabel 2 \"STOP\"", 0);
-	CMD_ExecuteCommand("SetChannelLabel 3 \"CLOSE\"", 0);
-	CMD_ExecuteCommand("SetChannelLabel 4 \"LOCK\"", 0);
-	CMD_ExecuteCommand("SetChannelLabel 5 \"REVERSE\"", 0);
-	CMD_ExecuteCommand("SetChannelLabel 6 \"RF_ADD\"", 0);
-	CMD_ExecuteCommand("SetChannelLabel 7 \"RF_DEL\"", 0);
-	CMD_ExecuteCommand("SetChannelLabel 8 \"DOOR_SENS\"", 0);
-	CMD_ExecuteCommand("SetChannelLabel 9 \"SAFETY_SENS\"", 0);
-	CMD_ExecuteCommand("SetChannelLabel 10 \"JOURNEY_TIME\"", 0);
-	CMD_ExecuteCommand("SetChannelLabel 11 \"CLOSE_PERCENT\"", 0);
-	CMD_ExecuteCommand("SetChannelLabel 12 \"UI_MODE\"", 0);
-	CMD_ExecuteCommand("SetChannelLabel 13 \"EMERGENCY_OPEN\"", 0);
-	CMD_ExecuteCommand("SetChannelLabel 14 \"FIRE_ALARM\"", 0);
-	CMD_ExecuteCommand("tuyaMcu_sendQueryState", 0);
-	// CFG_ClearPins();
+	
+	CHANNEL_SetLabel(OPEN, "OPEN", 1);
+    CHANNEL_SetLabel(STOP, "STOP", 1);
+    CHANNEL_SetLabel(CLOSE, "CLOSE", 1);
+    CHANNEL_SetLabel(LOCK, "LOCK", 1);
+    CHANNEL_SetLabel(REVERSE, "REVERSE", 1);
+    CHANNEL_SetLabel(RF_ADD, "RF_ADD", 1);
+    CHANNEL_SetLabel(RF_DEL, "RF_DEL", 1);
+    CHANNEL_SetLabel(DOOR_SENS, "DOOR_SENS", 1);
+    CHANNEL_SetLabel(SAFETY_SENS, "SAFETY_SENS", 1);
+    
+    CHANNEL_SetLabel(JOURNEY_TIME, "JOURNEY_TIME", 1);
+    CHANNEL_SetLabel(CLOSE_PERCENT, "CLOSE_PERCENT", 1);
+    CHANNEL_SetLabel(UI_MODE, "UI_MODE", 1);
+    CHANNEL_SetLabel(EMERGENCY_OPEN, "EMERGENCY_OPEN", 1);
+    CHANNEL_SetLabel(FIRE_ALARM, "FIRE_ALARM", 1);
+	CMD_ExecuteCommand("tuyaMcu_requestUpdate", 0);
 	CFG_Save_SetupTimer();
 	
 }
