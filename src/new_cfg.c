@@ -1062,9 +1062,6 @@ void setupCurtainPins() {
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 103 val 12", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 112 val 13", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 117 enum 14", 0);
-
-	CMD_ExecuteCommand("SetChannelEnum 14 1:Alarm 0:Normal", 0);
-	
 	CHANNEL_SetLabel(OPEN, "OPEN", 1);
     CHANNEL_SetLabel(STOP, "STOP", 1);
     CHANNEL_SetLabel(CLOSE, "CLOSE", 1);
@@ -1080,6 +1077,8 @@ void setupCurtainPins() {
     CHANNEL_SetLabel(UI_MODE, "UI_MODE", 1);
     CHANNEL_SetLabel(EMERGENCY_OPEN, "EMERGENCY_OPEN", 1);
     CHANNEL_SetLabel(FIRE_ALARM, "FIRE_ALARM", 1);
+	// CMD_ExecuteCommand("SetChannelEnum 14 0:Alarm 1:Normal", 0);
+	CMD_SetChannelEnum(NULL, "SetChannelEnum", "14 0:Alarm 1:Normal", 0);
 	CMD_ExecuteCommand("tuyaMcu_sendQueryState", 0);
 	CFG_Save_SetupTimer();
 	
