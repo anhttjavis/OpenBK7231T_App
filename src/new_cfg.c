@@ -1072,7 +1072,6 @@ void setupCurtainPins() {
     CHANNEL_SetLabel(RF_DEL, "RF_DEL", 1);
     CHANNEL_SetLabel(DOOR_SENS, "DOOR_SENS", 1);
     CHANNEL_SetLabel(SAFETY_SENS, "SAFETY_SENS", 1);
-    
     CHANNEL_SetLabel(JOURNEY_TIME, "JOURNEY_TIME", 1);
     CHANNEL_SetLabel(CLOSE_PERCENT, "CLOSE_PERCENT", 1);
     CHANNEL_SetLabel(UI_MODE, "UI_MODE", 1);
