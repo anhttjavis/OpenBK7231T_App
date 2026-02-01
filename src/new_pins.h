@@ -1189,11 +1189,14 @@ typedef enum channelType_e {
 #define UNLOCK_STATE 0x00
 #define REVERSE 5  //dp 110
 #define RF_ADD 6   //dp 16
-#define RF_DEL 7  //dp 140
+#define RF_DEL 7  //dp 104
 #define DOOR_SENS 8  //dp 101
 #define SAFETY_SENS 9   //dp 109
 #define JOURNEY_TIME 10  //dp 111
 #define CLOSE_PERCENT 11  //dp 114
+#define UI_MODE 12  //dp 103
+#define EMERGENCY_OPEN 13  //dp 112
+#define FIRE_ALARM 14  //dp 117
 
 #define CHANNEL_MAX 64
 

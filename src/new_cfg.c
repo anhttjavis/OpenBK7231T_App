@@ -1043,6 +1043,9 @@ void setupCurtainPins() {
 	CHANNEL_SetType(SAFETY_SENS, ChType_OpenClosed_Inv);
 	CHANNEL_SetType(JOURNEY_TIME, ChType_TextField);
 	CHANNEL_SetType(CLOSE_PERCENT, ChType_Percent);
+	CHANNEL_SetType(UI_MODE, ChType_TextField);
+	CHANNEL_SetType(EMERGENCY_OPEN, ChType_Toggle);
+	CHANNEL_SetType(FIRE_ALARM, ChType_ReadOnlyEnum);
 	// linkTuyaMCUOutputToChannel [dpId] [varType] [channelID]
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 1 bool 1", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 2 bool 2", 0);
@@ -1050,11 +1053,15 @@ void setupCurtainPins() {
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 4 bool 4", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 110 bool 5", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 16 bool 6", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 140 bool 7", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 104 bool 7", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 101 bool 8", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 109 bool 9", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 111 val 10", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 114 val 11", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 103 val 12", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 112 val 13", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 117 enum 14", 0);
+	CMD_ExecuteCommand("SetChannelEnum 14 1:Alarm 0:Normal", 0);
 	// CFG_ClearPins();
 	CFG_Save_SetupTimer();
 	
