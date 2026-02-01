@@ -1029,6 +1029,7 @@ void CFG_SetSaveState(unsigned int time, byte state) {
 }
 
 void setupCurtainPins() {
+	CFG_ClearIO();
 	DRV_StartDriver("TuyaMCU");
 	UART_InitUART(9600, 0);
 	// CMD_ExecuteCommand("tuyaMcu_defWiFiState 4", 0);
@@ -1079,7 +1080,7 @@ void setupCurtainPins() {
     CHANNEL_SetLabel(UI_MODE, "UI_MODE", 1);
     CHANNEL_SetLabel(EMERGENCY_OPEN, "EMERGENCY_OPEN", 1);
     CHANNEL_SetLabel(FIRE_ALARM, "FIRE_ALARM", 1);
-	CMD_ExecuteCommand("tuyaMcu_requestUpdate", 0);
+	CMD_ExecuteCommand("tuyaMcu_sendQueryState", 0);
 	CFG_Save_SetupTimer();
 	
 }
