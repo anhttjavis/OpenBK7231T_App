@@ -1611,6 +1611,9 @@ OBK_Publish_Result MQTT_ReturnState(){
     cJSON_AddNumberToObject(json, "sensor", CHANNEL_Get(SAFETY_SENS) ? 0 : 1);
 	cJSON_AddNumberToObject(json, "journey_time", CHANNEL_Get(JOURNEY_TIME));
 	cJSON_AddNumberToObject(json, "reverse", CHANNEL_Get(REVERSE));
+	cJSON_AddNumberToObject(json, "fire_alarm", CHANNEL_Get(FIRE_ALARM));
+	cJSON_AddNumberToObject(json, "ui_mode", CHANNEL_Get(UI_MODE));
+	cJSON_AddNumberToObject(json, "emergency_open", CHANNEL_Get(EMERGENCY_OPEN));
     cJSON_AddNumberToObject(json, "noti", noti ? 1 : 0);
     cJSON_AddNumberToObject(json, "call", call ? 1 : 0);
     cJSON_AddNumberToObject(json, "check_open", check_call_open ? 1 : 0);
