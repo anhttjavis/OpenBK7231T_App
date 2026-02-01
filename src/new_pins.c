@@ -1340,7 +1340,7 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 	{
 	case OPEN:
 		if (iVal == 1) {
-			curtain_position = 100;
+			// curtain_position = 100;
 			garage_state = 1;
 			MQTT_ReturnState();
 			HTTPClient_Post_Notification("open");
@@ -1350,7 +1350,7 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 		break;
 	case CLOSE:
 		if (iVal == 1) {
-			curtain_position = 0;
+			// curtain_position = 0;
 			garage_state = 0;
 			MQTT_ReturnState();
 			HTTPClient_Post_Notification("close");
@@ -1359,8 +1359,8 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 		break;
 	case STOP:
 		if (iVal == 1) {
-			curtain_position = 50;
-			garage_state = 1;
+			// curtain_position = 50;
+			// garage_state = 1;
 			MQTT_ReturnState();
 			HTTPClient_Post_Notification("stop");
 			CFG_SetSaveState(time_ntp, 2);

@@ -1601,10 +1601,13 @@ OBK_Publish_Result MQTT_ReturnState(){
 			garage_state = 0;
 			curtain_position = 0;
 		}
+	} 
+	else {
+		curtain_position = 100 - CHANNEL_Get(CLOSE_PERCENT);
 	}
     cJSON_AddStringToObject(json, "id", "garage.1");
     cJSON_AddStringToObject(json, "state", garage_state == 1 ? "open" : "closed");
-    cJSON_AddNumberToObject(json, "position", 100 - CHANNEL_Get(CLOSE_PERCENT));
+    cJSON_AddNumberToObject(json, "position", curtain_position);
 	cJSON_AddNumberToObject(json, "sensor_enable", CFG_GetEnableSensor());
     cJSON_AddNumberToObject(json, "door_sensor", (CHANNEL_Get(DOOR_SENS) ? 0 : 1));
     cJSON_AddNumberToObject(json, "lock", CHANNEL_Get(LOCK));
