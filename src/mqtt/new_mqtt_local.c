@@ -744,7 +744,7 @@ cJSON* build_device_node() {
 	cJSON_AddItemToObject(dev, "identifiers", ids);     //identifiers
 
 	cJSON_AddStringToObject(dev, "manufacturer", "JAVIS");
-	cJSON_AddStringToObject(dev, "model", "Garage controller (Wifi_pro)");
+	cJSON_AddStringToObject(dev, "model", "Garage controller (Module Wifi 3.0)");
 	cJSON_AddStringToObject(dev, "name", CFG_GetMQTTNetIdLocal());
 	return dev;
 }
