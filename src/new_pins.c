@@ -8,6 +8,7 @@
 #include "httpserver/new_http.h"
 #include "logging/logging.h"
 #include "mqtt/new_mqtt.h"
+#include "mqtt/new_mqtt_local.h"
 // Commands register, execution API and cmd tokenizer
 #include "cmnds/cmd_public.h"
 #include "i2c/drv_i2c_public.h"
@@ -1343,6 +1344,7 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 			// curtain_position = 100;
 			garage_state = 1;
 			MQTT_ReturnState();
+			MQTT_ReturnState_local();
 			HTTPClient_Post_Notification("open");
 			Check_TimeCall(time_ntp);
 			CFG_SetSaveState(time_ntp, 1);
@@ -1353,6 +1355,7 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 			// curtain_position = 0;
 			garage_state = 0;
 			MQTT_ReturnState();
+			MQTT_ReturnState_local();
 			HTTPClient_Post_Notification("close");
 			CFG_SetSaveState(time_ntp, 3);
 		}
@@ -1362,6 +1365,7 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 			// curtain_position = 50;
 			// garage_state = 1;
 			MQTT_ReturnState();
+			MQTT_ReturnState_local();
 			HTTPClient_Post_Notification("stop");
 			CFG_SetSaveState(time_ntp, 2);
 		}
@@ -1370,10 +1374,12 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 		if (iVal == 1) {
 			curtain_lock = true;
 			MQTT_ReturnState();
+			MQTT_ReturnState_local();
 			HTTPClient_Post_Notification("lock");
 		} else if (iVal == 0) {
 			curtain_lock = false;
 			MQTT_ReturnState();
+			MQTT_ReturnState_local();
 			HTTPClient_Post_Notification("unlock");
 		}
 		break;
@@ -1381,16 +1387,18 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 		if (iVal == 1) {
 			reverse = true;
             MQTT_ReturnState();
+			MQTT_ReturnState_local();
 		} else if (iVal == 0) {
 			reverse = false;
 			MQTT_ReturnState();
+			MQTT_ReturnState_local();
 		}
 		break;
 	case DOOR_SENS:
 		if(prevValue != iVal){
 			door_sensor = iVal;
 			MQTT_ReturnState();
-			// MQTT_ReturnState_local();
+			MQTT_ReturnState_local();
 			if(iVal == true && CHANNEL_Get(LOCK) == true && garage_state == 0){
 				check_call = 1;
 				HTTPClient_Post_Notification("pry");   
@@ -1402,18 +1410,19 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 			if(iVal == 0){
 				sensor_lock = iVal;
 				MQTT_ReturnState();
-				// MQTT_ReturnState_local();
+				MQTT_ReturnState_local();
 				check_call = 6;
 				HTTPClient_Post_Notification("stuck");
 			} 
 			else if(iVal == 1){
 				sensor_lock = iVal;
 				MQTT_ReturnState();
-				// MQTT_ReturnState_local();
+				MQTT_ReturnState_local();
 			}
 		}
 	default:
 		MQTT_ReturnState();
+		MQTT_ReturnState_local();
 		break;
 	}
 #endif

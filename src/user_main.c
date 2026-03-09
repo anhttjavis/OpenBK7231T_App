@@ -1281,6 +1281,7 @@ void QuickTick(void* param)
 	// process received messages here..
 #if ENABLE_MQTT
 	MQTT_RunQuickTick();
+	MQTT_RunQuickTick_local();
 #endif
 
 #if ENABLE_LED_BASIC

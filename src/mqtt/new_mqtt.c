@@ -1046,6 +1046,7 @@ int channelSet(obk_mqtt_request_t* request) {
 			if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
 				if (!strcmp(tokenStrValue, "get_states")) {
 					MQTT_ReturnState();
+					MQTT_ReturnState_local();
 					os_free(p);
 					os_free(t);
 					return 1;

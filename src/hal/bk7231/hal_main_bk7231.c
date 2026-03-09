@@ -19,6 +19,7 @@ void trigger_quick_oneshot(uint32_t type);
 
 // from new_mqtt.c
 extern int MQTT_process_received();
+extern int MQTT_process_received_local();
 // from new_pins.c
 extern void PIN_ticks(void *param);
 
@@ -100,6 +101,7 @@ void process_oneshot_timer(void *a, void*b){
   if (g_timer_triggers & ONESHOT_MQTT_PROCESS){
 #if ENABLE_MQTT
     MQTT_process_received();
+	MQTT_process_received_local();
 #endif
     g_timer_triggers &= ~ONESHOT_MQTT_PROCESS;
   }
@@ -117,6 +119,7 @@ void process_quick_oneshot_timer(void *a, void*b){
     //MQTT_process_received();
     // 1 means it's a trigger/interrupt
     PIN_ticks((void *)0);
+	MQTT_process_received_local();
     g_quick_timer_triggers &= ~ONESHOT_BUTTON_PROCESS;
   }
 }
