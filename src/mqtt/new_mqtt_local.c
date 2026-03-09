@@ -779,9 +779,7 @@ void sendDiscoveryHomeassistant(char* name) {
 	cJSON_AddStringToObject(root, "object_id", text);
 	cJSON_AddStringToObject(root, "value_template", "{{ value_json.door_sensor }}");
 	msg = cJSON_PrintUnformatted(root);
-#ifdef JWGU_BEKEN_CBU_MCU_IPX
 	MQTT_PublishTopicToHomeAssistant_local(mqtt_client_local, msg, DOOR_SENSOR);
-#endif
 // tamper
 	cJSON_DeleteItemFromObject(root, "device_class");
 	cJSON_DeleteItemFromObject(root, "name");
@@ -804,9 +802,7 @@ void sendDiscoveryHomeassistant(char* name) {
 	cJSON_AddStringToObject(root, "value_template", "{{ value_json.sensor }}");
 	
 	msg = cJSON_PrintUnformatted(root);
-#ifdef JWGU_BEKEN_CBU_MCU_IPX
 	MQTT_PublishTopicToHomeAssistant_local(mqtt_client_local, msg, TAMPER_SENSOR);
-#endif
 //lock
 	cJSON_DeleteItemFromObject(root, "device_class");
 	cJSON_DeleteItemFromObject(root, "name");
@@ -1325,13 +1321,25 @@ OBK_Publish_Result MQTT_PublishTele_local(const char* teleName, const char* tele
 OBK_Publish_Result MQTT_ReturnState_local()
 {
 	cJSON *json = cJSON_CreateObject();
-
+	if(CFG_GetEnableSensor() == 1){
+		if(door_sensor == 0){
+			garage_state = 1;
+			curtain_position = 100;
+		}
+		else{
+			garage_state = 0;
+			curtain_position = 0;
+		}
+	} 
+	else {
+		curtain_position = 100 - CHANNEL_Get(CLOSE_PERCENT);
+	}
     cJSON_AddStringToObject(json, "id", "garage.1");
     cJSON_AddStringToObject(json, "state", garage_state == 1 ? "open" : "closed");
     cJSON_AddNumberToObject(json, "position", curtain_position);
-    cJSON_AddNumberToObject(json, "door_sensor", (door_sensor ? 0 : 1));
-    cJSON_AddNumberToObject(json, "lock", curtain_lock ? 1 : 0);
-    cJSON_AddNumberToObject(json, "sensor", (sensor_lock ? 1 : 0));
+    cJSON_AddNumberToObject(json, "door_sensor", (CHANNEL_Get(DOOR_SENS) ? 0 : 1));
+    cJSON_AddNumberToObject(json, "lock", CHANNEL_Get(LOCK));
+    cJSON_AddNumberToObject(json, "sensor", CHANNEL_Get(SAFETY_SENS) ? 0 : 1);
 
 	 char *dataStr = cJSON_PrintUnformatted(json);
 	cJSON_Delete(json);
