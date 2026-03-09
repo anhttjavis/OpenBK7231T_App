@@ -1029,6 +1029,7 @@ void CFG_SetSaveState(unsigned int time, byte state) {
 }
 
 void setupCurtainPins() {
+	CFG_ClearIO();
 	DRV_StartDriver("TuyaMCU");
 	UART_InitUART(9600, 0);
 	// CMD_ExecuteCommand("tuyaMcu_defWiFiState 4", 0);
@@ -1039,10 +1040,13 @@ void setupCurtainPins() {
 	CHANNEL_SetType(REVERSE, ChType_Toggle);
 	CHANNEL_SetType(RF_ADD, ChType_Toggle);
 	CHANNEL_SetType(RF_DEL, ChType_Toggle);
-	CHANNEL_SetType(DOOR_SENS, ChType_OpenClosed);
-	CHANNEL_SetType(SAFETY_SENS, ChType_OpenClosed);
+	CHANNEL_SetType(DOOR_SENS, ChType_OpenClosed_Inv);
+	CHANNEL_SetType(SAFETY_SENS, ChType_OpenClosed_Inv);
 	CHANNEL_SetType(JOURNEY_TIME, ChType_TextField);
 	CHANNEL_SetType(CLOSE_PERCENT, ChType_Percent);
+	CHANNEL_SetType(UI_MODE, ChType_TextField);
+	CHANNEL_SetType(EMERGENCY_OPEN, ChType_Toggle);
+	CHANNEL_SetType(FIRE_ALARM, ChType_ReadOnlyEnum);
 	// linkTuyaMCUOutputToChannel [dpId] [varType] [channelID]
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 1 bool 1", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 2 bool 2", 0);
@@ -1050,12 +1054,32 @@ void setupCurtainPins() {
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 4 bool 4", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 110 bool 5", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 16 bool 6", 0);
-	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 140 bool 7", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 104 bool 7", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 101 bool 8", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 109 bool 9", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 111 val 10", 0);
 	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 114 val 11", 0);
-	// CFG_ClearPins();
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 103 val 12", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 112 val 13", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 117 enum 14", 0);
+	
+	CHANNEL_SetLabel(OPEN, "OPEN", 1);
+    CHANNEL_SetLabel(STOP, "STOP", 1);
+    CHANNEL_SetLabel(CLOSE, "CLOSE", 1);
+    CHANNEL_SetLabel(LOCK, "LOCK", 1);
+    CHANNEL_SetLabel(REVERSE, "REVERSE", 1);
+    CHANNEL_SetLabel(RF_ADD, "RF_ADD", 1);
+    CHANNEL_SetLabel(RF_DEL, "RF_DEL", 1);
+    CHANNEL_SetLabel(DOOR_SENS, "DOOR_SENS", 1);
+    CHANNEL_SetLabel(SAFETY_SENS, "SAFETY_SENS", 1);
+    CHANNEL_SetLabel(JOURNEY_TIME, "JOURNEY_TIME", 1);
+    CHANNEL_SetLabel(CLOSE_PERCENT, "CLOSE_PERCENT", 1);
+    CHANNEL_SetLabel(UI_MODE, "UI_MODE", 1);
+    CHANNEL_SetLabel(EMERGENCY_OPEN, "EMERGENCY_OPEN", 1);
+    CHANNEL_SetLabel(FIRE_ALARM, "FIRE_ALARM", 1);
+	// CMD_ExecuteCommand("SetChannelEnum 14 0:Alarm 1:Normal", 0);
+	CMD_SetChannelEnum(NULL, "SetChannelEnum", "14 0:Alarm 1:Normal", 0);
+	CMD_ExecuteCommand("tuyaMcu_sendQueryState", 0);
 	CFG_Save_SetupTimer();
 	
 }

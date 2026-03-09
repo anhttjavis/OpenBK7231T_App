@@ -1340,7 +1340,7 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 	{
 	case OPEN:
 		if (iVal == 1) {
-			curtain_position = 100;
+			// curtain_position = 100;
 			garage_state = 1;
 			MQTT_ReturnState();
 			HTTPClient_Post_Notification("open");
@@ -1350,7 +1350,7 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 		break;
 	case CLOSE:
 		if (iVal == 1) {
-			curtain_position = 0;
+			// curtain_position = 0;
 			garage_state = 0;
 			MQTT_ReturnState();
 			HTTPClient_Post_Notification("close");
@@ -1359,8 +1359,8 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 		break;
 	case STOP:
 		if (iVal == 1) {
-			curtain_position = 50;
-			garage_state = 1;
+			// curtain_position = 50;
+			// garage_state = 1;
 			MQTT_ReturnState();
 			HTTPClient_Post_Notification("stop");
 			CFG_SetSaveState(time_ntp, 2);
@@ -1399,14 +1399,14 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 		break;
 	case SAFETY_SENS:
 		if(iVal != prevValue){ 
-			if(iVal == 1){
+			if(iVal == 0){
 				sensor_lock = iVal;
 				MQTT_ReturnState();
 				// MQTT_ReturnState_local();
 				check_call = 6;
 				HTTPClient_Post_Notification("stuck");
 			} 
-			else if(iVal == 0){
+			else if(iVal == 1){
 				sensor_lock = iVal;
 				MQTT_ReturnState();
 				// MQTT_ReturnState_local();
