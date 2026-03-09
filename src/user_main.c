@@ -31,6 +31,7 @@
 #include "httpserver/http_tcp_server.h"
 #include "httpserver/rest_interface.h"
 #include "mqtt/new_mqtt.h"
+#include "mqtt/new_mqtt_local.h"
 #include "hal/hal_ota.h"
 #include "httpclient/http_client.h"
 #if ENABLE_LITTLEFS
@@ -653,10 +654,16 @@ int g_doHomeAssistantDiscoveryIn = 0;
 int g_bBootMarkedOK = 0;
 int g_rebootReason = 0;
 static int bMQTTconnected = 0;
+static int bMQTTLocalconnected = 0;
 
 int Main_HasMQTTConnected()
 {
 	return bMQTTconnected;
+}
+
+int Main_HasMQTTLocalConnected()
+{
+	return bMQTTLocalconnected;
 }
 
 int Main_HasWiFiConnected()
@@ -781,6 +788,7 @@ void Main_OnEverySecond()
 	TimeOut_t myTimeout;	// to get uptime from xTicks - not working on WINDOWS and TXW81X and RDA5981
 #endif
 	int newMQTTState;
+	int newMQTTLocalState;
 	const char* safe;
 	int i;
 
@@ -829,6 +837,17 @@ void Main_OnEverySecond()
 		}
 		else {
 			EventHandlers_FireEvent(CMD_EVENT_MQTT_STATE, 0);
+		}
+	}
+
+	newMQTTLocalState = MQTT_RunEverySecondUpdate_local();
+	if (newMQTTLocalState != bMQTTLocalconnected) {
+		bMQTTLocalconnected = newMQTTLocalState;
+		if (newMQTTLocalState) {
+			EventHandlers_FireEvent(CMD_EVENT_MQTT_LOCAL_STATE, 1);
+		}
+		else {
+			EventHandlers_FireEvent(CMD_EVENT_MQTT_LOCAL_STATE, 0);
 		}
 	}
 #endif
@@ -1381,6 +1400,7 @@ void Main_Init_AfterDelay_Unsafe(bool bStartAutoRunScripts) {
 	// all MQTT happens in timer thread?
 #if ENABLE_MQTT
 	MQTT_init();
+	MQTT_init_local();
 #endif
 	NTP_Init();
 	CMD_Init_Delayed();
@@ -1666,6 +1686,7 @@ void Main_Init_After_Delay()
 			if (Main_HasFastConnect()) {
 #if ENABLE_MQTT
 				mqtt_loopsWithDisconnected = 9999;
+				mqtt_loopsWithDisconnected_local = 9999;
 #endif
 				Main_ConnectToWiFiNow();
 			}

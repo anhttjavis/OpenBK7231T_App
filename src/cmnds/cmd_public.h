@@ -175,7 +175,9 @@ enum EventCode {
 	CMD_EVENT_RC,
 
 	// must be lower than 256
-	CMD_EVENT_MAX_TYPES
+	CMD_EVENT_MAX_TYPES,
+	
+	CMD_EVENT_MQTT_LOCAL_STATE
 };
 
 int EVENT_ParseEventName(const char *s);

@@ -168,6 +168,8 @@ int EVENT_ParseEventName(const char *s) {
 		return CMD_EVENT_CHANGE_NOMQTTTIME;
 	if(!stricmp(s, "OnMQTT"))
 		return CMD_EVENT_ON_MQTT;
+	if(!stricmp(s, "MQTTLocalState"))
+		return CMD_EVENT_MQTT_LOCAL_STATE;
 #endif
 #if ENABLE_NTP
 	if (!stricmp(s, "NTPState"))

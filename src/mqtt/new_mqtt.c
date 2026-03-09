@@ -814,7 +814,7 @@ int channelSet(obk_mqtt_request_t* request) {
 					}
 					sprintf(netid, "%"PRIu64"", num);
 					CFG_SetMQTTNetIdLocal(netid);
-					// MQTT_init_local();
+					MQTT_init_local();
 				}
 			}
 			i += t[i + 1].size + 1;
@@ -916,7 +916,7 @@ int channelSet(obk_mqtt_request_t* request) {
 		else if (state_control == CONNECT_HC) {
 			if (strcmp(tokenStrValue,"name") == 0){
 				if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) == true) {
-					// sendDiscoveryHomeassistant(tokenStrValue);
+					sendDiscoveryHomeassistant(tokenStrValue);
 				}
 			}
 			i += t[i + 1].size + 1;
