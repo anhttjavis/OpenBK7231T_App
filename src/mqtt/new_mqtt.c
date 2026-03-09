@@ -19,6 +19,7 @@
 #include "../httpclient/http_client.h"
 #include "../cJSON/cJSON.h"
 #include "../jsmn/jsmn_h.h"
+#include "new_mqtt_local.h"
 #include <math.h>
 #ifndef WINDOWS
 #include <lwip/dns.h>
