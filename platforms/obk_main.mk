@@ -59,6 +59,7 @@ OBKM_SRC  += $(OBK_SRCS)mqtt/new_mqtt_deduper.c
 OBKM_SRC  += $(OBK_SRCS)jsmn/jsmn.c
 OBKM_SRC  += $(OBK_SRCS)logging/logging.c
 OBKM_SRC  += $(OBK_SRCS)mqtt/new_mqtt.c
+OBKM_SRC  += $(OBK_SRCS)mqtt/new_mqtt_local.c
 OBKM_SRC  += $(OBK_SRCS)new_cfg.c
 OBKM_SRC  += $(OBK_SRCS)new_common.c
 OBKM_SRC  += $(OBK_SRCS)new_ping.c
