@@ -707,6 +707,15 @@ int channelSet_local(obk_mqtt_request_t* request) {
 							CHANNEL_Set(LOCK,UNLOCK_STATE,0);
 						}
 					}
+					else if (strcmp(tokenStrValue,"set_position") == 0){
+						i += t[i + 1].size + 1;
+						if (tryGetTokenString(json_str, &t[i + 1], tokenStrValue) && strcmp(tokenStrValue, "value") == 0) {
+							int value = atoi(json_str + t[i + 2].start);
+							if(value >= 0 && value <= 100){
+							CHANNEL_Set(CLOSE_PERCENT,100 - value ,0);	
+							}
+						}
+					}
 				}
 			}
 			i += t[i + 1].size + 1;
@@ -857,6 +866,10 @@ void sendDiscoveryHomeassistant(char* name) {
 	cJSON_AddStringToObject(root, "payload_open", "{\"type\":\"control\",\"data\":\"open\"}");
 	cJSON_AddStringToObject(root, "payload_close", "{\"type\":\"control\",\"data\":\"close\"}");
 	cJSON_AddStringToObject(root, "payload_stop", "{\"type\":\"control\",\"data\":\"stop\"}");
+	cJSON_AddStringToObject(root, "position_topic", "2353170504/garage.1/state");
+	cJSON_AddStringToObject(root, "position_template", "{{ value_json.position }}");
+	cJSON_AddStringToObject(root, "set_position_topic", "2353170504/garage.1/set");
+	cJSON_AddStringToObject(root, "set_position_template", "{\"type\":\"control\",\"data\":\"set_position\",\"value\": {{ position }}}");
 	sprintf(text, "%s_cover_wifi_mqtt", CFG_GetMQTTNetIdLocal());
 	cJSON_AddStringToObject(root, "unique_id", text);
    	cJSON_AddStringToObject(root,"value_template", "{{ value_json.state }}");
