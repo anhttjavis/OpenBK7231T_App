@@ -866,10 +866,13 @@ void sendDiscoveryHomeassistant(char* name) {
 	cJSON_AddStringToObject(root, "payload_open", "{\"type\":\"control\",\"data\":\"open\"}");
 	cJSON_AddStringToObject(root, "payload_close", "{\"type\":\"control\",\"data\":\"close\"}");
 	cJSON_AddStringToObject(root, "payload_stop", "{\"type\":\"control\",\"data\":\"stop\"}");
-	cJSON_AddStringToObject(root, "position_topic", "2353170504/garage.1/state");
-	cJSON_AddStringToObject(root, "position_template", "{{ value_json.position }}");
-	cJSON_AddStringToObject(root, "set_position_topic", "2353170504/garage.1/set");
-	cJSON_AddStringToObject(root, "set_position_template", "{\"type\":\"control\",\"data\":\"set_position\",\"value\": {{ position }}}");
+	sprintf(text, "%s/garage.1/state", CFG_GetMQTTNetIdLocal());
+	cJSON_AddStringToObject(root, "json_attributes_topic", text);
+	cJSON_AddStringToObject(root, "position_topic", text);
+	cJSON_AddStringToObject(root, "position_template", "{{ 100 - (value_json.position | int(0)) }}");
+	sprintf(text, "%s/garage.1/set", CFG_GetMQTTNetIdLocal());
+	cJSON_AddStringToObject(root, "set_position_topic", text);
+	cJSON_AddStringToObject(root, "set_position_template", "{\"type\":\"control\",\"data\":\"set_position\",\"value\": {{ 100 - position }}}");
 	sprintf(text, "%s_cover_wifi_mqtt", CFG_GetMQTTNetIdLocal());
 	cJSON_AddStringToObject(root, "unique_id", text);
    	cJSON_AddStringToObject(root,"value_template", "{{ value_json.state }}");
