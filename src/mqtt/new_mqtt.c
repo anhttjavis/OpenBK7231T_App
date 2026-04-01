@@ -1686,7 +1686,7 @@ OBK_Publish_Result MQTT_ReturnSys()
 
     // Add data to the JSON object
     cJSON_AddStringToObject(json, "model", MODEL);
-    cJSON_AddStringToObject(json, "version", USER_SW_VER);
+    cJSON_AddStringToObject(json, "version", VERSION);
     cJSON_AddNumberToObject(json, "build", BUILD_NUMBER);
     cJSON_AddStringToObject(json, "hardware", HARDWARE);
     cJSON_AddStringToObject(json, "ip", HAL_GetMyIPString());
