@@ -1079,6 +1079,20 @@ void setupCurtainPins() {
     CHANNEL_SetLabel(FIRE_ALARM, "FIRE_ALARM", 1);
 	// CMD_ExecuteCommand("SetChannelEnum 14 0:Alarm 1:Normal", 0);
 	CMD_SetChannelEnum(NULL, "SetChannelEnum", "14 0:Alarm 1:Normal", 0);
+	
+
+	CHANNEL_SetType(ALERT, ChType_Toggle);
+	CHANNEL_SetType(DISABLE_REMOTE, ChType_Toggle);
+	CHANNEL_SetType(DISABLE_REMOTE_START_TIME, ChType_TextField);
+	CHANNEL_SetType(DISABLE_REMOTE_END_TIME, ChType_TextField);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 102 bool 15", 0);
+	CMD_ExecuteCommand("linkTuyaMCUOutputToChannel 115 bool 16", 0);
+	CHANNEL_SetLabel(ALERT, "ALERT", 1);
+	CHANNEL_SetLabel(DISABLE_REMOTE, "DISABLE_REMOTE", 1);
+	CHANNEL_SetLabel(DISABLE_REMOTE_START_TIME, "DISABLE_REMOTE_START_TIME", 1);
+	CHANNEL_SetLabel(DISABLE_REMOTE_END_TIME, "DISABLE_REMOTE_END_TIME", 1);
+	CMD_ExecuteCommand("SetStartValue 17 -1", 0);
+	CMD_ExecuteCommand("SetStartValue 18 -1", 0);
 	CMD_ExecuteCommand("tuyaMcu_sendQueryState", 0);
 	CFG_Save_SetupTimer();
 	

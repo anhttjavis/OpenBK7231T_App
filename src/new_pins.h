@@ -1200,6 +1200,10 @@ typedef enum channelType_e {
 #define EMERGENCY_OPEN 13  //dp 112
 #define FIRE_ALARM 14  //dp 117
 
+#define ALERT 15 //dp 102
+#define DISABLE_REMOTE 16 //dp 115
+#define DISABLE_REMOTE_START_TIME 17 
+#define DISABLE_REMOTE_END_TIME 18
 
 #define CHANNEL_MAX 64
 
