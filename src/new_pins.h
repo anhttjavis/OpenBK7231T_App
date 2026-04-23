@@ -1179,8 +1179,10 @@ typedef enum channelType_e {
 // #ifndef BUILD_NUMBER
 #define BUILD_NUMBER 78
 // #endif
-#define MODEL "JWGU3"
-#define HARDWARE "JWGU_BEKEN_T1_U_HL_MCU_IPX"
+// #define MODEL "JWGU3"
+// #define HARDWARE "JWGU_BEKEN_T1_U_HL_MCU_IPX"
+#define HARDWARE "JWGU_BEKEN_CBU_MCU_IPX"
+#define MODEL "JWGU2"
 #define OPEN 0x01  //dp 1
 #define STOP 0x02  //dp 2
 #define CLOSE 0x03 	//dp 3	

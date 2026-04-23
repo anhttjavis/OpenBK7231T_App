@@ -1606,7 +1606,7 @@ OBK_Publish_Result MQTT_PublishTele(const char* teleName, const char* teleValue)
 OBK_Publish_Result MQTT_ReturnState(){
 	cJSON *json = cJSON_CreateObject();
 	if(CFG_GetEnableSensor() == 1){
-		if(door_sensor == 0){
+		if(CHANNEL_Get(DOOR_SENS)){
 			garage_state = 1;
 			curtain_position = 100;
 		}
