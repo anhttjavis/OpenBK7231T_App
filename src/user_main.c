@@ -1127,6 +1127,7 @@ void Main_OnEverySecond()
 			}
 		}
 		processSchedules();
+		Check_DisableRemote();
 		if (g_startPingWatchDogAfter) {
 			//ADDLOGF_INFO("g_startPingWatchDogAfter %i", g_startPingWatchDogAfter);
 			g_startPingWatchDogAfter--;

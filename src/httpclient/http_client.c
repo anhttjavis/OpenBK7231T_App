@@ -1388,6 +1388,34 @@ void Check_TimeNotClose() {
         }
     }
 }
+
+int last_state = -1; // Biến tĩnh hoặc toàn cục để lưu trạng thái cuối cùng mà lịch trình thiết lập
+
+void Check_DisableRemote() {
+    int start = CHANNEL_Get(DISABLE_REMOTE_START_TIME);
+    int end = CHANNEL_Get(DISABLE_REMOTE_END_TIME);
+    if (start == end) return;
+
+    time_t time_ntp = (time_t)g_ntpTime + 25200;
+    struct tm *ltm = localtime(&time_ntp);
+    int now = ltm->tm_hour * 60 + ltm->tm_min;
+
+    bool in_range = (start > end) ? (now >= start || now <= end) : (now >= start && now <= end);
+
+    // CHỈ THỰC HIỆN KHI TRẠNG THÁI KHUNG GIỜ THAY ĐỔI
+    // Ví dụ: Vừa bước vào giờ cấm (in_range từ false -> true) 
+    // hoặc vừa thoát giờ cấm (in_range từ true -> false)
+    
+    if (in_range && last_state != 1) {
+        CHANNEL_Set(DISABLE_REMOTE, 1, 0);
+        last_state = 1; // Đánh dấu là đã xử lý việc khóa cho khung giờ này
+    } 
+    else if (!in_range && last_state != 0) {
+        CHANNEL_Set(DISABLE_REMOTE, 0, 0);
+        last_state = 0; // Đánh dấu là đã xử lý việc mở cho khung giờ này
+    }
+}
+
 int HTTPClient_Post_Notification(char* state){
     if (noti == false) {
         return 0;

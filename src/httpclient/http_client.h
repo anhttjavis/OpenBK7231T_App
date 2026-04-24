@@ -171,6 +171,7 @@ int HTTPClient_Post_Notification(char* state);
 int HTTPClient_Post_Notification_No_Set(char* state);
 void Check_TimeCall(int time_state);
 void Check_TimeNotClose();
+void Check_DisableRemote();
 int HTTPClient_Post_Call(char* state);
 int HTTPClient_Post_Call_No_Set(char* state);
 extern int check_accept;
