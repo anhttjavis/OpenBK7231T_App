@@ -1127,7 +1127,9 @@ void Main_OnEverySecond()
 			}
 		}
 		processSchedules();
+		#ifdef JWGB2
 		Check_DisableRemote();
+		#endif
 		if (g_startPingWatchDogAfter) {
 			//ADDLOGF_INFO("g_startPingWatchDogAfter %i", g_startPingWatchDogAfter);
 			g_startPingWatchDogAfter--;

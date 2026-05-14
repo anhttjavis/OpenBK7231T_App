@@ -1175,12 +1175,21 @@ typedef enum channelType_e {
 #define PLATFORM_GPIO_MAX 29
 #endif
 
+#define JWGB2
 #define VERSION "2.1.3"
 // #ifndef BUILD_NUMBER
 #define BUILD_NUMBER 78
 // #endif
+#ifdef JWGU3
 #define MODEL "JWGU3"
 #define HARDWARE "JWGU_BEKEN_T1_U_HL_MCU_IPX"
+#endif
+
+#ifdef JWGB2
+#define MODEL "JWGB2"
+#define HARDWARE "JWGB_BEKEN_T1_U_HL_MCU_IPX"
+#endif
+
 // #define HARDWARE "JWGU_BEKEN_CBU_MCU_IPX"
 // #define MODEL "JWGU2"
 #define OPEN 0x01  //dp 1
