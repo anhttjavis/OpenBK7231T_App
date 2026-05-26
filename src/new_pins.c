@@ -1336,8 +1336,8 @@ static void Channel_OnChanged(int ch, int prevValue, int iFlags) {
 	// 		MQTT_ChannelPublish(ch, 0);
 	// 	}
 	// }
-	unsigned int time_ntp = g_ntpTime + 7 * 60 * 60;
-	switch (ch)
+        unsigned int time_ntp = NTP_GetCurrentTime() + 7 * 60 * 60;
+        switch (ch)
 	{
 	case OPEN:
 		if (iVal == 1) {

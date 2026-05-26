@@ -1372,7 +1372,7 @@ void Check_TimeNotClose() {
     struct tm * ltm;
     int time_int;
     unsigned int time_ntp;
-	time_ntp = g_ntpTime + 25200;
+	time_ntp = NTP_GetCurrentTime() + 25200;
     ltm = localtime((time_t*)&time_ntp);
     time_int = ltm->tm_hour*60 + ltm->tm_min;
     if (CFG_GetTimeCheckStart() > CFG_GetTimeCheckEnd()){
@@ -1396,7 +1396,7 @@ void Check_DisableRemote() {
     int end = CHANNEL_Get(DISABLE_REMOTE_END_TIME);
     if (start == end) return;
 
-    time_t time_ntp = (time_t)g_ntpTime + 25200;
+    time_t time_ntp = (time_t)NTP_GetCurrentTime() + 25200;
     struct tm *ltm = localtime(&time_ntp);
     int now = ltm->tm_hour * 60 + ltm->tm_min;
 

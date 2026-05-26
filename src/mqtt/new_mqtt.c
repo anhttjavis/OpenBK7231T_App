@@ -691,7 +691,7 @@ int channelSet(obk_mqtt_request_t *request) {
   char *path[256];
   char tokenStrValue[MAX_JSON_VALUE_LENGTH + 1];
   int state_control = 0;
-  time_ntp = g_ntpTime + 7 * 60 * 60;
+  time_ntp = NTP_GetCurrentTime() + 7 * 60 * 60;
   // addLogAdv(LOG_DEBUG, LOG_FEATURE_MQTT, "channelSet topic %i with arg %s",
   // request->topic, request->received);
   int index_value = 0;
