@@ -1695,15 +1695,18 @@ OBK_Publish_Result MQTT_ReturnSys() {
   os_free(dataStr);
   return 0;
 }
-OBK_Publish_Result MQTT_ReturnTime()
-
-{
-  struct tm *ltm;
-  unsigned int time_ntp;
-  char dataStr[128];
-  sprintf(dataStr, "free: %d", xPortGetFreeHeapSize());
-  return MQTT_DoItemPublishString("freeheap", dataStr);
+OBK_Publish_Result MQTT_ReturnTime() {
+  cJSON *json = cJSON_CreateObject();
+  unsigned int time_ntp = g_ntpTime + 7 * 60 * 60;
+  cJSON_AddNumberToObject(json, "g_ntpTime", g_ntpTime);
+  cJSON_AddNumberToObject(json, "time_ntp", time_ntp);
+  char *dataStr = cJSON_PrintUnformatted(json);
+  cJSON_Delete(json);
+  MQTT_PublishTopicToClientData(mqtt_client, CFG_GetMQTTGroupTopic(), dataStr);
+  os_free(dataStr);
+  return 0;
 }
+
 OBK_Publish_Result MQTT_PublishStat(const char *statName,
                                     const char *statValue) {
   char topic[64];
