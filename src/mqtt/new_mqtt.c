@@ -1118,6 +1118,7 @@ int channelSet(obk_mqtt_request_t *request) {
         } else if (!strcmp(tokenStrValue, "get_history")) {
           int index = g_cfg.savestate.index;
           unsigned int date_time;
+          time_t raw_time;
           cJSON *root;
           cJSON *stats;
           char *msg;
@@ -1127,7 +1128,8 @@ int channelSet(obk_mqtt_request_t *request) {
             for (int i = index - 1; i >= 0; i--) {
               root = cJSON_CreateObject();
               date_time = g_cfg.savestate.time[i];
-              ltm = localtime((time_t *)&date_time);
+              raw_time = (time_t)date_time;
+              ltm = localtime(&raw_time);
               cJSON_AddNumberToObject(root, "year", ltm->tm_year + 1900);
               cJSON_AddNumberToObject(root, "month", ltm->tm_mon + 1);
               cJSON_AddNumberToObject(root, "day", ltm->tm_mday);
@@ -1140,7 +1142,8 @@ int channelSet(obk_mqtt_request_t *request) {
             for (int j = 49; j > index; j--) {
               root = cJSON_CreateObject();
               date_time = g_cfg.savestate.time[j];
-              ltm = localtime((time_t *)&date_time);
+              raw_time = (time_t)date_time;
+              ltm = localtime(&raw_time);
               cJSON_AddNumberToObject(root, "year", ltm->tm_year + 1900);
               cJSON_AddNumberToObject(root, "month", ltm->tm_mon + 1);
               cJSON_AddNumberToObject(root, "day", ltm->tm_mday);
@@ -1153,8 +1156,9 @@ int channelSet(obk_mqtt_request_t *request) {
           } else {
             for (int i = index - 1; i >= 0; i--) {
               root = cJSON_CreateObject();
-              date_time = g_cfg.savestate.time[i];
-              ltm = localtime((time_t *)&date_time);
+              date_time = g_cfg.savestate.time[i];	
+              raw_time = (time_t)date_time;
+              ltm = localtime(&raw_time);
               cJSON_AddNumberToObject(root, "year", ltm->tm_year + 1900);
               cJSON_AddNumberToObject(root, "month", ltm->tm_mon + 1);
               cJSON_AddNumberToObject(root, "day", ltm->tm_mday);
