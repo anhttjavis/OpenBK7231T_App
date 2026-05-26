@@ -1697,8 +1697,8 @@ OBK_Publish_Result MQTT_ReturnSys() {
 }
 OBK_Publish_Result MQTT_ReturnTime() {
   cJSON *json = cJSON_CreateObject();
-  unsigned int time_ntp = g_ntpTime + 7 * 60 * 60;
-  cJSON_AddNumberToObject(json, "g_ntpTime", g_ntpTime);
+  unsigned int time_ntp = NTP_GetCurrentTime() + 7 * 60 * 60;
+  cJSON_AddNumberToObject(json, "g_ntpTime", NTP_GetCurrentTime());
   cJSON_AddNumberToObject(json, "time_ntp", time_ntp);
   char *dataStr = cJSON_PrintUnformatted(json);
   cJSON_Delete(json);
