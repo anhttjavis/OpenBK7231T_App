@@ -248,6 +248,9 @@ jobs:
           - platform: OpenBK7238
             variant: default
             gcc: apt
+          - platform: OpenBK7238
+            variant: jwgb2
+            gcc: apt
           # - platform: OpenBK7252
           #   variant: default
           #   gcc: apt
@@ -298,6 +301,12 @@ jobs:
 
       - run: ls -la
   
+      - name: Modify new_pins.h for JWGB2 variant
+        if: ${{ matrix.platform == 'OpenBK7238' && matrix.variant == 'jwgb2' }}
+        run: |
+          sed -i 's/#define JWGU3/#define JWGB2/g' src/new_pins.h
+          echo "Đã thay đổi JWGU3 thành JWGB2 trong src/new_pins.h"
+          
       - name: Run make
         run: make APP_VERSION=${{ needs.refs.outputs.version }}${{ matrix.variant != 'default' && '_' || '' }}${{ matrix.variant != 'default' && matrix.variant || '' }} APP_NAME=${{ matrix.platform }} VARIANT="${{ matrix.variant }}" ${{ matrix.platform }}
 
