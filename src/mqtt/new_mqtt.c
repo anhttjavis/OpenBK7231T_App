@@ -1176,7 +1176,7 @@ int channelSet(obk_mqtt_request_t *request) {
             os_free(json_str);
             os_free(p);
             os_free(t);
-            os_free(ltm);
+            // os_free(ltm);
             return 0;
           }
           msg = cJSON_PrintUnformatted(stats);
@@ -1192,7 +1192,7 @@ int channelSet(obk_mqtt_request_t *request) {
           os_free(json_str);
           os_free(p);
           os_free(t);
-          os_free(ltm);
+        //   os_free(ltm);
           return 0;
         }
       }
@@ -1202,7 +1202,7 @@ int channelSet(obk_mqtt_request_t *request) {
   os_free(json_str);
   os_free(p);
   os_free(t);
-  os_free(ltm);
+//   os_free(ltm);
   return 1;
 }
 
@@ -1701,9 +1701,14 @@ OBK_Publish_Result MQTT_ReturnSys() {
 }
 OBK_Publish_Result MQTT_ReturnTime() {
   cJSON *json = cJSON_CreateObject();
-  unsigned int time_ntp = NTP_GetCurrentTime() + 7 * 60 * 60;
+  time_t time_ntp = (time_t)(NTP_GetCurrentTime() + 7 * 60 * 60);
+  struct tm * ltm;
+  int time_int;
+  ltm = localtime(&time_ntp);
+  time_int = ltm->tm_hour*60 + ltm->tm_min;
   cJSON_AddNumberToObject(json, "g_ntpTime", NTP_GetCurrentTime());
   cJSON_AddNumberToObject(json, "time_ntp", time_ntp);
+  cJSON_AddNumberToObject(json, "minutes", time_int);
   char *dataStr = cJSON_PrintUnformatted(json);
   cJSON_Delete(json);
   MQTT_PublishTopicToClientData(mqtt_client, CFG_GetMQTTGroupTopic(), dataStr);

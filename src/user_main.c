@@ -410,9 +410,9 @@ void RESET_ScheduleModuleReset(int delSeconds) {
 void processSchedule(int index, time_t now) {
 	struct tm * ltm;
 	int minutes;
-	unsigned int time_ntp;
-        time_ntp = NTP_GetCurrentTime() + 25200;
-        ltm = localtime((time_t*)&time_ntp);
+	time_t time_ntp;
+    time_ntp = (time_t)(NTP_GetCurrentTime() + 25200);
+    ltm = localtime(&time_ntp);
 	minutes = ltm->tm_hour*60 + ltm->tm_min;
     if (minutes < CFG_GetSchedule(index, "time")) {
         minutes += 1440;
@@ -440,9 +440,9 @@ void processSchedule(int index, time_t now) {
 void processSchedules() {
 	struct tm * ltm;
 	int time_int;
-	unsigned int time_ntp;
-        time_ntp = NTP_GetCurrentTime() + 25200;
-        ltm = localtime((time_t*)&time_ntp);
+	time_t time_ntp;
+    time_ntp = (time_t)NTP_GetCurrentTime() + 25200;
+    ltm = localtime(&time_ntp);
 	time_int = ltm->tm_hour*60 + ltm->tm_min;
     
     if (ltm->tm_year <= 100) {
@@ -453,7 +453,7 @@ void processSchedules() {
             processSchedule(index, time_int);
         }
     }
-	os_free(ltm);
+	// os_free(ltm);
 }
 
 static char scheduledDriverName[4][16];
